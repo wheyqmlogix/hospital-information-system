@@ -5,6 +5,7 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { db, type PatientRecord, type InventoryItem } from '@/lib/db';
 import { computePHBilling } from '@/lib/billing-utils';
 import { generateSOAPDF } from '@/lib/pdf-service';
+import UniversalScanner from '../shared/UniversalScanner';
 
 export default function BillingModule() {
   const patients = useLiveQuery(() => db.patients.toArray());
@@ -13,6 +14,7 @@ export default function BillingModule() {
   const [selectedPatientId, setSelectedPatientId] = useState<number | null>(null);
   const [philhealthBenefit, setPhilhealthBenefit] = useState(0);
   const [billItems, setBillItems] = useState<{name: string, price: number, qty: number}[]>([]);
+  const [isScannerOpen, setIsScannerOpen] = useState(false);
 
   const selectedPatient = patients?.find(p => p.id === selectedPatientId);
   const isSeniorOrPWD = useMemo(() => {
@@ -30,6 +32,18 @@ export default function BillingModule() {
 
   const addManualItem = (name: string, price: number) => {
     setBillItems([...billItems, { name, price, qty: 1 }]);
+  };
+
+  const handleBarcodeScan = (barcode: string) => {
+    // In a real system, you'd have a barcode field in the inventory table
+    // For this prototype, we'll simulate finding by name or ID
+    const item = inventory?.find(i => i.id.toString() === barcode || i.name.toLowerCase().includes(barcode.toLowerCase()));
+    if (item) {
+      addItem(item);
+      alert(`Added: ${item.name}`);
+    } else {
+      alert(`Barcode ${barcode} not found in inventory.`);
+    }
   };
 
   const handleProcessPayment = async () => {
@@ -57,10 +71,22 @@ export default function BillingModule() {
 
   return (
     <div className="p-4 grid grid-cols-1 lg:grid-cols-3 gap-8">
+      {isScannerOpen && (
+        <UniversalScanner onScan={handleBarcodeScan} onClose={() => setIsScannerOpen(false)} />
+      )}
+
       {/* Left: Item Selection */}
       <div className="lg:col-span-2 space-y-6">
         <div className="bg-white p-6 rounded-xl shadow-sm border space-y-4">
-          <h3 className="font-bold text-blue-900">1. Select Patient</h3>
+          <div className="flex justify-between items-center">
+            <h3 className="font-bold text-blue-900">1. Select Patient</h3>
+            <button 
+              onClick={() => setIsScannerOpen(true)}
+              className="bg-green-600 text-white px-4 py-2 rounded-lg font-bold text-xs flex items-center gap-2 hover:bg-green-700 transition-colors"
+            >
+              <span>📷</span> Scan Barcode
+            </button>
+          </div>
           <select 
             className="w-full border p-2 rounded" 
             onChange={e => setSelectedPatientId(parseInt(e.target.value))}

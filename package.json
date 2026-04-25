@@ -13,6 +13,7 @@
     "@serwist/next": "^9.5.7",
     "dexie": "^4.4.2",
     "dexie-react-hooks": "^4.4.0",
+    "html5-qrcode": "^2.3.8",
     "jspdf": "^4.2.1",
     "jspdf-autotable": "^5.0.7",
     "next": "16.2.4",
