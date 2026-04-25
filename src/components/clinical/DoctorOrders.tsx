@@ -3,8 +3,9 @@
 import { useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db, type PatientRecord, type InventoryItem } from '@/lib/db';
+import { type User } from '@/lib/auth';
 
-export default function DoctorOrders({ currentDoctor }: { currentDoctor: string }) {
+export default function DoctorOrders({ currentUser }: { currentUser: User }) {
   const admissions = useLiveQuery(() => db.admissions.where('status').equals('ADMITTED').toArray());
   const patients = useLiveQuery(() => db.patients.toArray());
   const inventory = useLiveQuery(() => db.inventory.toArray());
@@ -52,7 +53,7 @@ export default function DoctorOrders({ currentDoctor }: { currentDoctor: string 
       quantity: qty,
       instructions,
       status: 'PENDING',
-      orderedBy: currentDoctor,
+      orderedBy: currentUser.name,
       createdAt: Date.now()
     });
 
@@ -65,8 +66,15 @@ export default function DoctorOrders({ currentDoctor }: { currentDoctor: string 
   return (
     <div className="p-4 space-y-6">
       <div className="bg-white p-6 rounded-xl shadow-sm border space-y-4">
-        <h2 className="text-xl font-bold text-blue-900 flex items-center gap-2">
-          <span>🩺</span> Physician Order Entry
+        <h2 className="text-xl font-bold text-blue-900 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span>🩺</span> Physician Order Entry
+          </div>
+          {currentUser.licenseNo && (
+            <span className="text-[10px] bg-blue-50 text-blue-700 px-2 py-1 rounded border border-blue-100 uppercase tracking-widest font-black">
+              DR License: {currentUser.licenseNo}
+            </span>
+          )}
         </h2>
         
         <form onSubmit={handleCreateOrder} className="space-y-4">

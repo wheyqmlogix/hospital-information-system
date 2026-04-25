@@ -144,6 +144,17 @@ export interface BillingItem {
   type: 'MEDICINE' | 'ROOM' | 'LAB' | 'PF';
 }
 
+export interface UserAccount {
+  id?: number;
+  username: string;
+  password?: string; // Optional in IndexedDB for security, or hashed
+  name: string;
+  role: string;
+  licenseNo?: string;
+  status: 'active' | 'inactive';
+  lastLogin?: number;
+}
+
 export class HISDatabase extends Dexie {
   patients!: Table<PatientRecord>;
   inventory!: Table<InventoryItem>;
@@ -156,10 +167,11 @@ export class HISDatabase extends Dexie {
   orders!: Table<MedicalOrder>;
   procedures!: Table<Procedure>;
   drugLogs!: Table<DangerousDrugLog>;
+  users!: Table<UserAccount>;
 
   constructor() {
     super('HISDatabase');
-    this.version(9).stores({
+    this.version(10).stores({
       patients: '++id, status, lastName, patientPIN, memberPIN, diagnosisCode, [lastName+firstName]',
       inventory: '++id, name, genericName, pndfCode',
       stocks: '++id, inventoryId, expiryDate',
@@ -170,7 +182,8 @@ export class HISDatabase extends Dexie {
       admissions: '++id, patientId, bedId, status',
       orders: '++id, patientId, type, status',
       procedures: '++id, patientId, rvsCode, status',
-      drugLogs: '++id, inventoryId, patientId, orderId'
+      drugLogs: '++id, inventoryId, patientId, orderId',
+      users: '++id, username, role, status'
     });
   }
 }

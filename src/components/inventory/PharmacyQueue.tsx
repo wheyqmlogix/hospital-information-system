@@ -3,13 +3,12 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db, type MedicalOrder, type InventoryItem } from '@/lib/db';
 
-export default function PharmacyQueue() {
+export default function PharmacyQueue({ currentStaff }: { currentStaff: string }) {
   const pendingOrders = useLiveQuery(() => db.orders.where('status').equals('PENDING').and(o => o.type === 'MEDICATION').toArray());
   const patients = useLiveQuery(() => db.patients.toArray());
   const inventory = useLiveQuery(() => db.inventory.toArray());
   const stocks = useLiveQuery(() => db.stocks.toArray());
 
-  const [pharmacistName, setPharmacistName] = useState('Pharmacist Pedro');
   const [dangerousDrugModal, setDangerousDrugModal] = useState<{order: MedicalOrder, item: InventoryItem} | null>(null);
   const [physicianLicense, setPhysicianLicense] = useState('');
 
@@ -61,7 +60,7 @@ export default function PharmacyQueue() {
         quantity: order.quantity,
         physicianName: order.orderedBy,
         physicianLicense: physicianLicense,
-        pharmacistName: pharmacistName,
+        pharmacistName: currentStaff,
         timestamp: Date.now()
       });
       setDangerousDrugModal(null);
@@ -207,7 +206,7 @@ export default function PharmacyQueue() {
                 <input 
                   type="text" 
                   className="w-full border-2 border-gray-200 p-3 rounded-xl bg-gray-50"
-                  value={pharmacistName}
+                  value={currentStaff}
                   disabled
                 />
               </div>

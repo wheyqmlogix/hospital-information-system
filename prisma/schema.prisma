@@ -153,3 +153,15 @@ model BillingItem {
   subtotal    Float
   type        String     @default("MEDICINE")
 }
+
+model User {
+  id        Int      @id @default(autoincrement())
+  username  String   @unique
+  password  String
+  name      String
+  role      String   // ENCODER, DOCTOR, PHARMACIST, CASHIER, ADMIN
+  licenseNo String?
+  status    String   @default("active")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
