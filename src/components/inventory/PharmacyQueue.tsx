@@ -9,11 +9,20 @@ export default function PharmacyQueue() {
   const inventory = useLiveQuery(() => db.inventory.toArray());
   const stocks = useLiveQuery(() => db.stocks.toArray());
 
-  const handleDispense = async (order: MedicalOrder) => {
+  const [pharmacistName, setPharmacistName] = useState('Pharmacist Pedro');
+  const [dangerousDrugModal, setDangerousDrugModal] = useState<{order: MedicalOrder, item: InventoryItem} | null>(null);
+  const [physicianLicense, setPhysicianLicense] = useState('');
+
+  const handleDispense = async (order: MedicalOrder, isDangerousOverride = false) => {
     if (!order.id || !order.inventoryId) return;
 
     const item = inventory?.find(i => i.id === order.inventoryId);
     if (!item) return;
+
+    if (item.isDangerousDrug && !isDangerousOverride) {
+      setDangerousDrugModal({ order, item });
+      return;
+    }
 
     // 1. FEFO Logic: Get batches for this item, sorted by expiry
     const itemBatches = stocks?.filter(s => s.inventoryId === order.inventoryId)
@@ -43,7 +52,23 @@ export default function PharmacyQueue() {
     // 3. Mark Order as FILLED
     await db.orders.update(order.id, { status: 'FILLED' });
 
-    // 4. Automatically Add to Patient's Bill
+    // 4. Log Dangerous Drug if applicable
+    if (item.isDangerousDrug) {
+      await db.drugLogs.add({
+        orderId: order.id,
+        inventoryId: item.id!,
+        patientId: order.patientId,
+        quantity: order.quantity,
+        physicianName: order.orderedBy,
+        physicianLicense: physicianLicense,
+        pharmacistName: pharmacistName,
+        timestamp: Date.now()
+      });
+      setDangerousDrugModal(null);
+      setPhysicianLicense('');
+    }
+
+    // 5. Automatically Add to Patient's Bill
     // Find active billing or create one
     let billing = await db.billing.where('patientId').equals(order.patientId).and(b => b.status === 'unpaid').first();
     
@@ -52,10 +77,13 @@ export default function PharmacyQueue() {
         patientId: order.patientId,
         status: 'unpaid',
         philhealthBenefit: 0,
+        hmoCoverage: 0,
         seniorDiscount: 0,
+        vatExemption: 0,
         totalActualCharges: 0,
         netAmount: 0,
-        createdAt: Date.now()
+        createdAt: Date.now(),
+        updatedAt: Date.now()
       });
       billing = await db.billing.get(billingId);
     }
@@ -67,13 +95,15 @@ export default function PharmacyQueue() {
       serviceName: item.name,
       quantity: order.quantity,
       unitPrice: item.basePrice,
-      subtotal: subtotal
+      subtotal: subtotal,
+      type: 'MEDICINE'
     });
 
     // Update total charges on billing record
     await db.billing.update(billing!.id!, {
       totalActualCharges: billing!.totalActualCharges + subtotal,
-      netAmount: billing!.netAmount + subtotal // Simplification for now
+      netAmount: billing!.netAmount + subtotal, // Simplification for now
+      updatedAt: Date.now()
     });
 
     alert(`Dispensed ${order.quantity} ${item.name}. Billing updated automatically.`);
@@ -106,8 +136,15 @@ export default function PharmacyQueue() {
                   <span className="text-xs font-bold text-gray-500 uppercase">{new Date(order.createdAt).toLocaleTimeString()}</span>
                 </div>
                 <h3 className="font-bold text-lg text-gray-900">{patient?.lastName}, {patient?.firstName}</h3>
-                <p className="text-sm font-bold text-blue-600 uppercase">{order.item} × {order.quantity}</p>
-                <p className="text-xs text-gray-500 italic mt-1">SIG: {order.instructions}</p>
+                <div className="flex items-center gap-2 mb-1">
+                  <p className="text-sm font-bold text-blue-600 uppercase">{order.item} × {order.quantity}</p>
+                  {item?.pndfCode ? (
+                    <span className="text-[9px] bg-green-100 text-green-700 px-1 rounded font-bold uppercase">PNDF</span>
+                  ) : (
+                    <span className="text-[9px] bg-yellow-100 text-yellow-700 px-1 rounded font-bold uppercase">NON-PNDF</span>
+                  )}
+                </div>
+                <p className="text-xs text-gray-500 italic">SIG: {order.instructions}</p>
                 <p className="text-[10px] text-gray-400 mt-1 uppercase font-bold">Ordered By: {order.orderedBy}</p>
               </div>
 
@@ -136,6 +173,68 @@ export default function PharmacyQueue() {
           </div>
         )}
       </div>
+
+      {/* Dangerous Drug Validation Modal */}
+      {dangerousDrugModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-2xl max-w-md w-full p-8 shadow-2xl border-4 border-red-600 space-y-6">
+            <div className="text-center">
+              <span className="text-5xl">⚠️</span>
+              <h3 className="text-2xl font-black text-red-700 mt-2 uppercase tracking-tighter">Dangerous Drug Protocol</h3>
+              <p className="text-sm text-gray-500 font-bold uppercase tracking-widest mt-1">Regulated by PDEA/DOH</p>
+            </div>
+
+            <div className="bg-red-50 p-4 rounded-lg border border-red-100 space-y-1">
+              <p className="text-[10px] font-bold text-red-400 uppercase">Drug to Dispense</p>
+              <p className="font-bold text-red-900">{dangerousDrugModal.item.name} ({dangerousDrugModal.item.genericName})</p>
+              <p className="text-xs font-bold">Qty: {dangerousDrugModal.order.quantity} units</p>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-xs font-black text-gray-400 uppercase mb-1">Physician S2 License No.</label>
+                <input 
+                  type="text" 
+                  className="w-full border-2 border-gray-200 p-3 rounded-xl focus:border-red-500 outline-none transition-all font-mono"
+                  placeholder="e.g. S2-24-12345"
+                  value={physicianLicense}
+                  onChange={e => setPhysicianLicense(e.target.value)}
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-black text-gray-400 uppercase mb-1">Dispensing Pharmacist</label>
+                <input 
+                  type="text" 
+                  className="w-full border-2 border-gray-200 p-3 rounded-xl bg-gray-50"
+                  value={pharmacistName}
+                  disabled
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-4">
+              <button 
+                onClick={() => {setDangerousDrugModal(null); setPhysicianLicense('');}} 
+                className="flex-1 border-2 border-gray-200 p-3 rounded-xl font-bold text-gray-500 hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={() => handleDispense(dangerousDrugModal.order, true)}
+                disabled={!physicianLicense}
+                className="flex-1 bg-red-600 text-white p-3 rounded-xl font-bold shadow-lg shadow-red-200 hover:bg-red-700 disabled:bg-gray-300"
+              >
+                Sign & Dispense
+              </button>
+            </div>
+            
+            <p className="text-[9px] text-gray-400 text-center italic">
+              Dispensing this record will automatically create a log entry in the Regulated Drug Registry as per Republic Act No. 9165.
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

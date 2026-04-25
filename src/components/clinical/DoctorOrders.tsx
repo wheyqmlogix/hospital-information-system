@@ -8,6 +8,7 @@ export default function DoctorOrders({ currentDoctor }: { currentDoctor: string 
   const admissions = useLiveQuery(() => db.admissions.where('status').equals('ADMITTED').toArray());
   const patients = useLiveQuery(() => db.patients.toArray());
   const inventory = useLiveQuery(() => db.inventory.toArray());
+  const allOrders = useLiveQuery(() => db.orders.where('status').equals('PENDING').toArray());
 
   const [selectedPatientId, setSelectedPatientId] = useState<number | null>(null);
   const [orderType, setOrderType] = useState<'MEDICATION' | 'LABORATORY'>('MEDICATION');
@@ -19,6 +20,23 @@ export default function DoctorOrders({ currentDoctor }: { currentDoctor: string 
     ...a,
     patient: patients?.find(p => p.id === a.patientId)
   })) || [];
+
+  const selectedInventoryItem = inventory?.find(i => i.name === selectedItem);
+  
+  const interactionWarning = (() => {
+    if (!selectedPatientId || !selectedInventoryItem?.drugClass || orderType !== 'MEDICATION') return null;
+    
+    const patientActiveOrders = allOrders?.filter(o => o.patientId === selectedPatientId && o.type === 'MEDICATION') || [];
+    const activeDrugClasses = patientActiveOrders.map(o => {
+      const item = inventory?.find(i => i.id === o.inventoryId);
+      return item?.drugClass;
+    }).filter(Boolean);
+
+    if (activeDrugClasses.includes(selectedInventoryItem.drugClass)) {
+      return `DUPLICATE DRUG CLASS: Patient is already prescribed another ${selectedInventoryItem.drugClass}. Please review for potential interactions or therapeutic duplication.`;
+    }
+    return null;
+  })();
 
   const handleCreateOrder = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -87,15 +105,27 @@ export default function DoctorOrders({ currentDoctor }: { currentDoctor: string 
             <div className="md:col-span-2">
               <label className="block text-sm font-medium mb-1">Item / Test Name</label>
               {orderType === 'MEDICATION' ? (
-                <select 
-                  className="w-full border p-2 rounded" 
-                  value={selectedItem} 
-                  onChange={e => setSelectedItem(e.target.value)}
-                  required
-                >
-                  <option value="">Search Pharmacy Inventory...</option>
-                  {inventory?.map(i => <option key={i.id} value={i.name}>{i.name} ({i.genericName})</option>)}
-                </select>
+                <>
+                  <select 
+                    className="w-full border p-2 rounded" 
+                    value={selectedItem} 
+                    onChange={e => setSelectedItem(e.target.value)}
+                    required
+                  >
+                    <option value="">Search Pharmacy Inventory...</option>
+                    {inventory?.map(i => <option key={i.id} value={i.name}>{i.name} ({i.genericName})</option>)}
+                  </select>
+                  {selectedItem && inventory?.find(i => i.name === selectedItem) && !inventory.find(i => i.name === selectedItem)?.pndfCode && (
+                    <div className="mt-1 p-2 bg-yellow-50 border border-yellow-200 rounded text-[10px] text-yellow-800 font-bold">
+                      ⚠️ NON-PNDF WARNING: This medication is not in the National Formulary. Justification may be required for PhilHealth reimbursement.
+                    </div>
+                  )}
+                  {interactionWarning && (
+                    <div className="mt-1 p-2 bg-red-50 border border-red-200 rounded text-[10px] text-red-800 font-black animate-pulse">
+                      ⛔ {interactionWarning}
+                    </div>
+                  )}
+                </>
               ) : (
                 <input 
                   type="text" 

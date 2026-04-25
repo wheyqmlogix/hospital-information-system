@@ -6,6 +6,7 @@ import { db, type PatientRecord, type InventoryItem } from '@/lib/db';
 import { computeAdvancedPHBilling } from '@/lib/billing-utils';
 import { generateSOAPDF } from '@/lib/pdf-service';
 import UniversalScanner from '../shared/UniversalScanner';
+import StatementOfAccount from './StatementOfAccount';
 
 const HMO_PROVIDERS = ['Maxicare', 'Intellicare', 'Medicard', 'PhilCare', 'Caritas Health', 'Avega'];
 
@@ -19,6 +20,7 @@ export default function BillingModule() {
   const [hmoCoverage, setHmoCoverage] = useState(0);
   const [hmoProvider, setHmoProvider] = useState('');
   const [isScannerOpen, setIsScannerOpen] = useState(false);
+  const [isPaid, setIsPaid] = useState(false);
 
   const selectedPatient = patients?.find(p => p.id === selectedPatientId);
   const activeBilling = activeBillings?.find(b => b.patientId === selectedPatientId);
@@ -37,13 +39,6 @@ export default function BillingModule() {
     if (!selectedPatient || !activeBilling) return;
     const billingNo = `BILL-${activeBilling.id}`;
     
-    await generateSOAPDF({
-      patient: selectedPatient,
-      items: billItems?.map(i => ({ name: i.serviceName, price: i.unitPrice, qty: i.quantity })) || [],
-      summary: billingSummary,
-      billingNumber: billingNo
-    });
-
     await db.billing.update(activeBilling.id!, { 
       status: 'paid', 
       amountPaid: billingSummary.netAmount,
@@ -53,17 +48,29 @@ export default function BillingModule() {
       updatedAt: Date.now()
     });
 
-    alert(`Professional SOA ${billingNo} generated and marked as PAID.`);
+    setIsPaid(true);
+    alert(`Payment processed for ${billingNo}. You can now print the SOA.`);
+  };
+
+  const handlePrintPDF = async () => {
+    if (!selectedPatient || !activeBilling) return;
+    const billingNo = `BILL-${activeBilling.id}`;
+    await generateSOAPDF({
+      patient: selectedPatient,
+      items: billItems?.map(i => ({ name: i.serviceName, price: i.unitPrice, qty: i.quantity })) || [],
+      summary: billingSummary,
+      billingNumber: billingNo
+    });
   };
 
   return (
     <div className="p-4 grid grid-cols-1 lg:grid-cols-3 gap-8">
       {isScannerOpen && <UniversalScanner onScan={() => {}} onClose={() => setIsScannerOpen(false)} />}
 
-      <div className="lg:col-span-2 space-y-6">
+      <div className="lg:col-span-2 space-y-6 print:hidden">
         <div className="bg-white p-6 rounded-xl shadow-sm border space-y-4">
           <h3 className="font-bold text-blue-900">1. Select Patient for Billing</h3>
-          <select className="w-full border p-2 rounded" onChange={e => setSelectedPatientId(parseInt(e.target.value))}>
+          <select className="w-full border p-2 rounded" onChange={e => {setSelectedPatientId(parseInt(e.target.value)); setIsPaid(false);}}>
             <option value="">Choose Patient...</option>
             {patients?.map(p => <option key={p.id} value={p.id}>{p.lastName}, {p.firstName}</option>)}
           </select>
@@ -140,59 +147,45 @@ export default function BillingModule() {
 
       {/* Right Column: Statement of Account */}
       <div className="space-y-6">
-        <div className="bg-white p-6 rounded-xl shadow-2xl border-2 border-blue-900 space-y-4">
-          <div className="flex justify-between items-start">
-            <h3 className="font-bold text-xl text-blue-900">Final Summary</h3>
-            <span className="bg-red-100 text-red-700 text-[10px] font-black px-2 py-0.5 rounded">UNPAID</span>
-          </div>
-          
-          <div className="space-y-3 text-sm">
-            <div className="flex justify-between text-gray-500">
-              <span>Gross Charges:</span>
-              <span className="font-bold">₱{billingSummary.grossAmount.toFixed(2)}</span>
-            </div>
+        {selectedPatient && billItems && billItems.length > 0 ? (
+          <div className="space-y-4">
+            <StatementOfAccount 
+              patient={selectedPatient} 
+              items={billItems} 
+              summary={billingSummary} 
+              billingNumber={activeBilling ? `BILL-${activeBilling.id}` : undefined}
+              isPaid={isPaid}
+            />
             
-            <div className="space-y-2 py-3 border-y border-dashed">
-              <div className="flex justify-between text-blue-700">
-                <span>PhilHealth Deduction:</span>
-                <span className="font-bold">-₱{billingSummary.philhealthBenefit.toFixed(2)}</span>
-              </div>
-              {hmoCoverage > 0 && (
-                <div className="flex justify-between text-purple-700">
-                  <span>HMO ({hmoProvider}):</span>
-                  <span className="font-bold">-₱{billingSummary.hmoCoverage.toFixed(2)}</span>
-                </div>
-              )}
-              {isSeniorOrPWD && (
-                <>
-                  <div className="flex justify-between text-green-700 italic">
-                    <span>VAT Exemption (12%):</span>
-                    <span>-₱{billingSummary.vatExemption.toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between text-green-700 italic font-bold">
-                    <span>Senior/PWD Discount (20%):</span>
-                    <span>-₱{billingSummary.seniorDiscount.toFixed(2)}</span>
-                  </div>
-                </>
-              )}
-            </div>
-
-            <div className="flex justify-between text-2xl font-black pt-2 text-blue-900">
-              <span>NET DUE:</span>
-              <span className="underline decoration-double">₱{billingSummary.netAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+            <div className="flex gap-2 print:hidden">
+              <button 
+                className="flex-1 bg-blue-900 text-white p-4 rounded-xl font-bold shadow-xl active:scale-95 transition-all hover:bg-blue-800 disabled:bg-gray-200"
+                onClick={handleProcessPayment}
+                disabled={isPaid || grossAmount === 0}
+              >
+                {isPaid ? 'Payment Processed' : 'Process Payment'}
+              </button>
+              <button 
+                className="bg-gray-100 text-gray-700 p-4 rounded-xl font-bold shadow hover:bg-gray-200"
+                onClick={handlePrintPDF}
+              >
+                PDF
+              </button>
+              <button 
+                className="bg-gray-100 text-gray-700 p-4 rounded-xl font-bold shadow hover:bg-gray-200"
+                onClick={() => window.print()}
+              >
+                Print
+              </button>
             </div>
           </div>
+        ) : (
+          <div className="bg-white p-12 rounded-xl border border-dashed text-center text-gray-400 print:hidden">
+            Select a patient with charges to view the Statement of Account.
+          </div>
+        )}
 
-          <button 
-            className="w-full bg-blue-900 text-white p-4 rounded-xl font-bold shadow-xl mt-4 active:scale-95 transition-all hover:bg-blue-800 disabled:bg-gray-200"
-            onClick={handleProcessPayment}
-            disabled={!selectedPatient || grossAmount === 0}
-          >
-            Process Payment & Print SOA
-          </button>
-        </div>
-
-        <div className="p-4 bg-white rounded-lg border text-[10px] text-gray-400 space-y-1">
+        <div className="p-4 bg-white rounded-lg border text-[10px] text-gray-400 space-y-1 print:hidden">
           <p className="font-bold uppercase tracking-widest text-gray-600">Compliance Audit Trail</p>
           <p>• PH Law: Senior discount is applied after PhilHealth and HMO.</p>
           <p>• HMO: {hmoProvider || 'None'} verified and posted.</p>
@@ -202,3 +195,4 @@ export default function BillingModule() {
     </div>
   );
 }
+

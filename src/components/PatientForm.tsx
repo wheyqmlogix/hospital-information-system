@@ -1,8 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { savePatientRecord, type MembershipType, type RelationToMember } from '@/lib/db';
-import { MEMBERSHIP_TYPES, RELATIONSHIPS } from '@/lib/constants';
+import { savePatientRecord, type MembershipType, type RelationToMember, type CivilStatus } from '@/lib/db';
+import { MEMBERSHIP_TYPES, RELATIONSHIPS, CIVIL_STATUS, RELIGIONS, NATIONALITIES } from '@/lib/constants';
 import { getPermissions, type User } from '@/lib/auth';
 import ICD10Search from './clinical/ICD10Search';
 import UniversalScanner from './shared/UniversalScanner';
@@ -22,6 +22,9 @@ export default function PatientForm({ currentUser }: PatientFormProps) {
     extensionName: '',
     birthDate: '',
     sex: 'Male' as 'Male' | 'Female',
+    civilStatus: 'S' as CivilStatus,
+    religion: 'RC',
+    nationality: 'PH',
     memberPIN: '',
     patientPIN: '',
     membershipType: 'S' as MembershipType,
@@ -74,9 +77,9 @@ export default function PatientForm({ currentUser }: PatientFormProps) {
       await savePatientRecord(formData);
       alert('Record saved successfully.');
       window.location.reload();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to save:', error);
-      alert('Error saving record.');
+      alert(error.message || 'Error saving record.');
     } finally {
       setIsSaving(false);
     }
@@ -128,6 +131,31 @@ export default function PatientForm({ currentUser }: PatientFormProps) {
               <label className="block text-sm font-medium">Birth Date</label>
               <input type="date" value={formData.birthDate} onChange={e => setFormData({...formData, birthDate: e.target.value})} className="w-full border p-2 rounded bg-gray-50" required />
             </div>
+            <div>
+              <label className="block text-sm font-medium">Sex</label>
+              <select value={formData.sex} onChange={e => setFormData({...formData, sex: e.target.value as 'Male' | 'Female'})} className="w-full border p-2 rounded bg-gray-50">
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium">Civil Status</label>
+              <select value={formData.civilStatus} onChange={e => setFormData({...formData, civilStatus: e.target.value as CivilStatus})} className="w-full border p-2 rounded bg-gray-50">
+                {CIVIL_STATUS.map(s => <option key={s.code} value={s.code}>{s.label}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium">Nationality</label>
+              <select value={formData.nationality} onChange={e => setFormData({...formData, nationality: e.target.value})} className="w-full border p-2 rounded bg-gray-50">
+                {NATIONALITIES.map(n => <option key={n.code} value={n.code}>{n.label}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium">Religion</label>
+              <select value={formData.religion} onChange={e => setFormData({...formData, religion: e.target.value})} className="w-full border p-2 rounded bg-gray-50">
+                {RELIGIONS.map(r => <option key={r.code} value={r.code}>{r.label}</option>)}
+              </select>
+            </div>
           </div>
 
           <div className="mt-6 p-4 bg-blue-50 rounded-lg">
@@ -148,6 +176,12 @@ export default function PatientForm({ currentUser }: PatientFormProps) {
                 <label className="block text-sm font-medium text-blue-900">Membership Category</label>
                 <select value={formData.membershipType} onChange={e => setFormData({...formData, membershipType: e.target.value as MembershipType})} className="w-full border p-2 rounded border-blue-200">
                   {MEMBERSHIP_TYPES.map(t => <option key={t.code} value={t.code}>{t.label}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-blue-900">Relationship to Member</label>
+                <select value={formData.relationshipToMember} onChange={e => setFormData({...formData, relationshipToMember: e.target.value as RelationToMember})} className="w-full border p-2 rounded border-blue-200">
+                  {RELATIONSHIPS.map(r => <option key={r.code} value={r.code}>{r.label}</option>)}
                 </select>
               </div>
             </div>

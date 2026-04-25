@@ -54,3 +54,22 @@ export function getDemographicStats(records: PatientRecord[]) {
 
   return { sex, ageGroups };
 }
+
+export function getRevenueStats(billings: any[]) {
+  return billings.reduce((acc, b) => {
+    acc.totalGross += b.totalActualCharges;
+    acc.totalNet += b.netAmount;
+    acc.totalPhilHealth += b.philhealthBenefit;
+    acc.totalDiscounts += (b.seniorDiscount + b.vatExemption);
+    return acc;
+  }, { totalGross: 0, totalNet: 0, totalPhilHealth: 0, totalDiscounts: 0 });
+}
+
+export function getOccupancyStats(beds: any[]) {
+  const total = beds.length;
+  const occupied = beds.filter(b => b.status === 'OCCUPIED').length;
+  const cleaning = beds.filter(b => b.status === 'CLEANING').length;
+  const vacant = beds.filter(b => b.status === 'VACANT').length;
+
+  return { total, occupied, cleaning, vacant, rate: total > 0 ? (occupied / total) * 100 : 0 };
+}

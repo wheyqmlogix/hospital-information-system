@@ -2,6 +2,7 @@ import Dexie, { type Table } from 'dexie';
 
 export type MembershipType = 'S' | 'G' | 'I' | 'NS' | 'NO' | 'PS' | 'PG' | 'P';
 export type RelationToMember = 'M' | 'S' | 'C' | 'P';
+export type CivilStatus = 'S' | 'M' | 'W' | 'D';
 export type SyncStatus = 'draft' | 'validated' | 'synced';
 
 export interface PatientRecord {
@@ -12,6 +13,9 @@ export interface PatientRecord {
   extensionName?: string;
   birthDate: string;
   sex: 'Male' | 'Female';
+  civilStatus: CivilStatus;
+  religion?: string;
+  nationality: string;
   memberPIN?: string;
   patientPIN?: string;
   membershipType?: MembershipType;
@@ -19,6 +23,13 @@ export interface PatientRecord {
   chiefComplaint?: string;
   diagnosisCode?: string;
   diagnosisDescription?: string;
+  vitals?: {
+    bpSystolic: number;
+    bpDiastolic: number;
+    temp: number;
+    weight: number;
+    height?: number;
+  };
   status: SyncStatus;
   createdAt: number;
   updatedAt: number;
@@ -74,10 +85,23 @@ export interface Procedure {
   createdAt: number;
 }
 
+export interface DangerousDrugLog {
+  id?: number;
+  orderId: number;
+  inventoryId: number;
+  patientId: number;
+  quantity: number;
+  physicianName: string;
+  physicianLicense: string; // S2 License
+  pharmacistName: string;
+  timestamp: number;
+}
+
 export interface InventoryItem {
   id?: number;
   name: string;
   genericName?: string;
+  drugClass?: string;
   pndfCode?: string;
   vatExempt: boolean;
   isDangerousDrug: boolean;
@@ -131,11 +155,12 @@ export class HISDatabase extends Dexie {
   admissions!: Table<Admission>;
   orders!: Table<MedicalOrder>;
   procedures!: Table<Procedure>;
+  drugLogs!: Table<DangerousDrugLog>;
 
   constructor() {
     super('HISDatabase');
-    this.version(7).stores({
-      patients: '++id, status, lastName, patientPIN, memberPIN, diagnosisCode',
+    this.version(9).stores({
+      patients: '++id, status, lastName, patientPIN, memberPIN, diagnosisCode, [lastName+firstName]',
       inventory: '++id, name, genericName, pndfCode',
       stocks: '++id, inventoryId, expiryDate',
       billing: '++id, patientId, encounterId, status',
@@ -144,7 +169,8 @@ export class HISDatabase extends Dexie {
       beds: '++id, roomId, status',
       admissions: '++id, patientId, bedId, status',
       orders: '++id, patientId, type, status',
-      procedures: '++id, patientId, rvsCode, status'
+      procedures: '++id, patientId, rvsCode, status',
+      drugLogs: '++id, inventoryId, patientId, orderId'
     });
   }
 }
@@ -152,6 +178,17 @@ export class HISDatabase extends Dexie {
 export const db = new HISDatabase();
 
 export async function savePatientRecord(record: Omit<PatientRecord, 'id' | 'status' | 'createdAt' | 'updatedAt'>) {
+  // Duplicate Detection
+  if (record.memberPIN) {
+    const existing = await db.patients.where('memberPIN').equals(record.memberPIN).first();
+    if (existing) throw new Error(`Duplicate detected: PIN ${record.memberPIN} already exists for ${existing.lastName}, ${existing.firstName}`);
+  }
+
+  const nameMatch = await db.patients.where('[lastName+firstName]').equals([record.lastName, record.firstName]).first();
+  if (nameMatch && nameMatch.birthDate === record.birthDate) {
+    throw new Error(`Duplicate detected: Patient with same name and birth date already exists.`);
+  }
+
   return await db.patients.add({
     ...record,
     status: 'draft',

@@ -16,6 +16,30 @@ export const RELATIONSHIPS = [
   { code: 'P', label: 'Parent' },
 ] as const;
 
+export const CIVIL_STATUS = [
+  { code: 'S', label: 'Single' },
+  { code: 'M', label: 'Married' },
+  { code: 'W', label: 'Widowed' },
+  { code: 'D', label: 'Separated' },
+] as const;
+
+export const RELIGIONS = [
+  { code: 'RC', label: 'Roman Catholic' },
+  { code: 'INC', label: 'Iglesia ni Cristo' },
+  { code: 'ISL', label: 'Islam' },
+  { code: 'PROT', label: 'Protestant' },
+  { code: 'SDA', label: 'Seventh-day Adventist' },
+  { code: 'OTH', label: 'Other' },
+] as const;
+
+export const NATIONALITIES = [
+  { code: 'PH', label: 'Filipino' },
+  { code: 'US', label: 'American' },
+  { code: 'CN', label: 'Chinese' },
+  { code: 'JP', label: 'Japanese' },
+  { code: 'OTH', label: 'Other' },
+] as const;
+
 export const COMMON_DIAGNOSES = [
   { code: 'J18.9', description: 'Pneumonia, unspecified' },
   { code: 'I10', description: 'Essential (primary) hypertension' },

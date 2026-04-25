@@ -11,6 +11,7 @@ export default function StockManagement() {
   const [newItem, setNewItem] = useState({
     name: '',
     genericName: '',
+    drugClass: '',
     pndfCode: '',
     vatExempt: true,
     isDangerousDrug: false,
@@ -27,7 +28,7 @@ export default function StockManagement() {
   const handleAddItem = async (e: React.FormEvent) => {
     e.preventDefault();
     await db.inventory.add(newItem);
-    setNewItem({ name: '', genericName: '', pndfCode: '', vatExempt: true, isDangerousDrug: false, basePrice: 0 });
+    setNewItem({ name: '', genericName: '', drugClass: '', pndfCode: '', vatExempt: true, isDangerousDrug: false, basePrice: 0 });
   };
 
   const handleAddBatch = async (e: React.FormEvent) => {
@@ -56,6 +57,18 @@ export default function StockManagement() {
               className="border p-2 rounded" 
               value={newItem.genericName} 
               onChange={e => setNewItem({...newItem, genericName: e.target.value})} 
+            />
+            <input 
+              placeholder="Drug Class (e.g. Antibiotic, NSAID)" 
+              className="border p-2 rounded" 
+              value={newItem.drugClass} 
+              onChange={e => setNewItem({...newItem, drugClass: e.target.value})} 
+            />
+            <input 
+              placeholder="PNDF Code (e.g. PH-DR-123)" 
+              className="border p-2 rounded" 
+              value={newItem.pndfCode} 
+              onChange={e => setNewItem({...newItem, pndfCode: e.target.value})} 
             />
             <div className="flex gap-4 items-center text-sm">
               <label className="flex items-center gap-2">
@@ -146,9 +159,20 @@ export default function StockManagement() {
                 <tr key={item.id} className="hover:bg-gray-50">
                   <td className="p-4">
                     <div className="font-bold text-blue-900">{item.name}</div>
-                    {item.isDangerousDrug && <span className="text-[10px] bg-red-100 text-red-700 px-1 rounded font-bold">DANGEROUS DRUG</span>}
+                    <div className="flex gap-1 mt-1">
+                      {item.isDangerousDrug && <span className="text-[10px] bg-red-100 text-red-700 px-1 rounded font-bold">DANGEROUS</span>}
+                      {item.pndfCode ? (
+                        <span className="text-[10px] bg-green-100 text-green-700 px-1 rounded font-bold">PNDF COMPLIANT</span>
+                      ) : (
+                        <span className="text-[10px] bg-yellow-100 text-yellow-700 px-1 rounded font-bold">NON-PNDF</span>
+                      )}
+                    </div>
                   </td>
-                  <td className="p-4 text-gray-500 italic">{item.genericName || 'N/A'}</td>
+                  <td className="p-4 text-gray-500 italic">
+                    <div className="font-medium text-gray-700">{item.genericName || 'N/A'}</div>
+                    {item.drugClass && <div className="text-[10px] text-blue-600 font-bold uppercase">{item.drugClass}</div>}
+                    {item.pndfCode && <div className="text-[10px] font-mono font-bold text-gray-400">Code: {item.pndfCode}</div>}
+                  </td>
                   <td className="p-4 font-bold">{totalQty} units</td>
                   <td className={`p-4 ${nearestExpiry && new Date(nearestExpiry) < new Date() ? 'text-red-600 font-bold' : ''}`}>
                     {nearestExpiry || 'N/A'}

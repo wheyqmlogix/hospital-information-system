@@ -12,6 +12,7 @@ export default function BedManagement() {
 
   const [selectedBed, setSelectedBed] = useState<number | null>(null);
   const [patientToAdmit, setPatientToAdmit] = useState<number | null>(null);
+  const [transferMode, setTransferMode] = useState<{fromBedId: number, patientId: number} | null>(null);
 
   const handleAdmit = async () => {
     if (!selectedBed || !patientToAdmit) return;
@@ -27,6 +28,26 @@ export default function BedManagement() {
     setSelectedBed(null);
     setPatientToAdmit(null);
     alert('Patient Admitted successfully.');
+  };
+
+  const handleTransfer = async (toBedId: number) => {
+    if (!transferMode) return;
+    const { fromBedId, patientId } = transferMode;
+
+    const admission = admissions?.find(a => a.bedId === fromBedId && a.patientId === patientId);
+    if (!admission) return;
+
+    // Update Admission record
+    await db.admissions.update(admission.id!, {
+      bedId: toBedId,
+    });
+
+    // Update Bed Statuses
+    await db.beds.update(fromBedId, { status: 'CLEANING' });
+    await db.beds.update(toBedId, { status: 'OCCUPIED' });
+
+    setTransferMode(null);
+    alert('Patient Transferred successfully. Original bed set to CLEANING.');
   };
 
   const handleDischarge = async (bedId: number) => {
@@ -73,6 +94,14 @@ export default function BedManagement() {
           <p className="text-sm text-gray-500">Real-time Admission & Room Management</p>
         </div>
         <div className="flex gap-4">
+          {transferMode && (
+            <button 
+              onClick={() => setTransferMode(null)}
+              className="bg-orange-100 text-orange-700 px-4 py-1 rounded-lg font-bold text-xs border border-orange-200 animate-pulse"
+            >
+              CANCEL TRANSFER MODE
+            </button>
+          )}
           <div className="flex items-center gap-1"><span className="w-3 h-3 bg-green-500 rounded"></span> <span className="text-xs">Vacant</span></div>
           <div className="flex items-center gap-1"><span className="w-3 h-3 bg-red-500 rounded"></span> <span className="text-xs">Occupied</span></div>
           <div className="flex items-center gap-1"><span className="w-3 h-3 bg-yellow-500 rounded"></span> <span className="text-xs">Cleaning</span></div>
@@ -80,17 +109,27 @@ export default function BedManagement() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {rooms?.map(room => (
-          <div key={room.id} className="bg-white rounded-xl shadow-sm border overflow-hidden">
-            <div className="p-4 bg-gray-50 border-b flex justify-between items-center">
-              <div>
-                <h3 className="font-bold text-gray-800">{room.name}</h3>
-                <span className="text-[10px] bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full font-bold">{room.type}</span>
+        {rooms?.map(room => {
+          const roomBeds = beds?.filter(b => b.roomId === room.id) || [];
+          const occupiedCount = roomBeds.filter(b => b.status === 'OCCUPIED').length;
+          const occupancyPercent = Math.round((occupiedCount / roomBeds.length) * 100) || 0;
+
+          return (
+            <div key={room.id} className="bg-white rounded-xl shadow-sm border overflow-hidden">
+              <div className="p-4 bg-gray-50 border-b flex justify-between items-center">
+                <div>
+                  <h3 className="font-bold text-gray-800">{room.name}</h3>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full font-bold">{room.type}</span>
+                    <span className={`text-[10px] font-bold ${occupancyPercent > 80 ? 'text-red-600' : 'text-gray-500'}`}>
+                      {occupancyPercent}% OCCUPIED
+                    </span>
+                  </div>
+                </div>
+                <span className="text-sm font-bold text-green-700">₱{room.rate.toFixed(0)}/day</span>
               </div>
-              <span className="text-sm font-bold text-green-700">₱{room.rate.toFixed(0)}/day</span>
-            </div>
-            <div className="p-4 grid grid-cols-2 gap-4">
-              {beds?.filter(b => b.roomId === room.id).map(bed => {
+              <div className="p-4 grid grid-cols-2 gap-4">
+                {roomBeds.map(bed => {
                 const admission = admissions?.find(a => a.bedId === bed.id);
                 const patient = patients?.find(p => p.id === admission?.patientId);
                 
@@ -98,10 +137,17 @@ export default function BedManagement() {
                   <div 
                     key={bed.id} 
                     className={`p-3 rounded-lg border-2 transition-all ${
-                      bed.status === 'VACANT' ? 'border-green-200 bg-green-50 hover:border-green-400 cursor-pointer' :
+                      bed.status === 'VACANT' ? 
+                        (transferMode ? 'border-orange-400 bg-orange-50 animate-pulse cursor-pointer' : 'border-green-200 bg-green-50 hover:border-green-400 cursor-pointer') :
                       bed.status === 'OCCUPIED' ? 'border-red-200 bg-red-50' : 'border-yellow-200 bg-yellow-50'
                     }`}
-                    onClick={() => bed.status === 'VACANT' && setSelectedBed(bed.id!)}
+                    onClick={() => {
+                      if (transferMode && bed.status === 'VACANT') {
+                        handleTransfer(bed.id!);
+                      } else if (!transferMode && bed.status === 'VACANT') {
+                        setSelectedBed(bed.id!);
+                      }
+                    }}
                   >
                     <div className="flex justify-between items-start mb-2">
                       <span className="text-xs font-bold text-gray-500">{bed.name}</span>
@@ -114,12 +160,20 @@ export default function BedManagement() {
                     {bed.status === 'OCCUPIED' ? (
                       <div className="space-y-1">
                         <p className="text-[11px] font-bold text-red-900 truncate">{patient?.lastName}, {patient?.firstName}</p>
-                        <button 
-                          onClick={(e) => { e.stopPropagation(); handleDischarge(bed.id!); }}
-                          className="text-[9px] w-full bg-white border border-red-200 text-red-600 font-bold py-1 rounded hover:bg-red-600 hover:text-white transition-colors"
-                        >
-                          DISCHARGE
-                        </button>
+                        <div className="flex gap-1">
+                          <button 
+                            onClick={(e) => { e.stopPropagation(); handleDischarge(bed.id!); }}
+                            className="text-[9px] flex-1 bg-white border border-red-200 text-red-600 font-bold py-1 rounded hover:bg-red-600 hover:text-white transition-colors"
+                          >
+                            DISCHARGE
+                          </button>
+                          <button 
+                            onClick={(e) => { e.stopPropagation(); setTransferMode({fromBedId: bed.id!, patientId: patient?.id!}); }}
+                            className="text-[9px] flex-1 bg-white border border-blue-200 text-blue-600 font-bold py-1 rounded hover:bg-blue-600 hover:text-white transition-colors"
+                          >
+                            TRANSFER
+                          </button>
+                        </div>
                       </div>
                     ) : bed.status === 'CLEANING' ? (
                       <button 
@@ -129,7 +183,9 @@ export default function BedManagement() {
                         SET VACANT
                       </button>
                     ) : (
-                      <p className="text-[10px] text-green-700 italic">Available</p>
+                      <p className="text-[10px] text-green-700 italic font-bold">
+                        {transferMode ? '→ TRANSFER HERE' : 'AVAILABLE'}
+                      </p>
                     )}
                   </div>
                 );
