@@ -8,7 +8,7 @@ datasource db {
 }
 
 model Patient {
-  id                   Int       @id @default(autoincrement())
+  id                   Int            @id @default(autoincrement())
   firstName            String
   lastName             String
   middleName           String?
@@ -22,11 +22,14 @@ model Patient {
   chiefComplaint       String?
   diagnosisCode        String?
   diagnosisDescription String?
-  status               String    @default("draft")
-  createdAt            DateTime  @default(now())
-  updatedAt            DateTime  @updatedAt
+  status               String         @default("draft")
+  createdAt            DateTime       @default(now())
+  updatedAt            DateTime       @updatedAt
   vitals               Vitals?
   billing              Billing[]
+  admissions           Admission[]
+  orders               MedicalOrder[]
+  procedures           Procedure[]
 }
 
 model Vitals {
@@ -38,6 +41,65 @@ model Vitals {
   temp        Float?
   weight      Float?
   height      Float?
+}
+
+model Room {
+  id       Int    @id @default(autoincrement())
+  name     String 
+  type     String 
+  rate     Float
+  beds     Bed[]
+}
+
+model Bed {
+  id         Int         @id @default(autoincrement())
+  roomId     Int
+  room       Room        @relation(fields: [roomId], references: [id])
+  name       String      
+  status     String      @default("VACANT") 
+  admissions Admission[]
+}
+
+model Admission {
+  id             Int       @id @default(autoincrement())
+  patientId      Int
+  patient        Patient   @relation(fields: [patientId], references: [id])
+  bedId          Int
+  bed            Bed       @relation(fields: [bedId], references: [id])
+  admissionDate  DateTime  @default(now())
+  dischargeDate  DateTime?
+  status         String    @default("ADMITTED") 
+  attendingPhys  String?
+  dietaryReq     String?   
+  transferReason String?
+}
+
+model MedicalOrder {
+  id          Int       @id @default(autoincrement())
+  patientId   Int
+  patient     Patient   @relation(fields: [patientId], references: [id])
+  type        String    
+  item        String    
+  inventoryId Int?      
+  quantity    Int       @default(1)
+  instructions String?
+  status      String    @default("PENDING") 
+  orderedBy   String
+  createdAt   DateTime  @default(now())
+}
+
+model Procedure {
+  id             Int      @id @default(autoincrement())
+  patientId      Int
+  patient        Patient  @relation(fields: [patientId], references: [id])
+  rvsCode        String   // PhilHealth RVS Code
+  description    String
+  procedureDate  DateTime @default(now())
+  surgeon        String
+  anesthesiologist String?
+  findings       String?
+  status         String   @default("COMPLETED")
+  createdAt      DateTime @default(now())
 }
 
 model Inventory {
@@ -67,10 +129,15 @@ model Billing {
   patient            Patient       @relation(fields: [patientId], references: [id])
   status             String        @default("unpaid")
   philhealthBenefit  Float         @default(0)
+  hmoCoverage        Float         @default(0)
+  hmoProvider        String?
   seniorDiscount     Float         @default(0)
+  vatExemption       Float         @default(0)
   totalActualCharges Float         @default(0)
   netAmount          Float         @default(0)
+  amountPaid         Float         @default(0)
   createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
   items              BillingItem[]
 }
 
@@ -84,4 +151,5 @@ model BillingItem {
   quantity    Int
   unitPrice   Float
   subtotal    Float
+  type        String     @default("MEDICINE")
 }

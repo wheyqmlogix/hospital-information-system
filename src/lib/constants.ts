@@ -28,3 +28,14 @@ export const COMMON_DIAGNOSES = [
   { code: 'N18.9', description: 'Chronic kidney disease, unspecified' },
   { code: 'J45.9', description: 'Asthma, unspecified' },
 ] as const;
+
+export const COMMON_RVS_CODES = [
+  { code: '47000', description: 'Appendectomy' },
+  { code: '59400', description: 'Normal Spontaneous Delivery (NSD)' },
+  { code: '59510', description: 'Cesarean Section' },
+  { code: '47562', description: 'Laparoscopic Cholecystectomy' },
+  { code: '66984', description: 'Cataract Surgery' },
+  { code: '90935', description: 'Hemodialysis' },
+  { code: '33510', description: 'Coronary Artery Bypass' },
+  { code: '27244', description: 'Open Treatment of Hip Fracture' },
+] as const;

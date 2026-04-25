@@ -6,36 +6,72 @@ export type SyncStatus = 'draft' | 'validated' | 'synced';
 
 export interface PatientRecord {
   id?: number;
-  // Demographics (PCDI)
   firstName: string;
   lastName: string;
   middleName?: string;
-  extensionName?: string; // Jr, III
+  extensionName?: string;
   birthDate: string;
   sex: 'Male' | 'Female';
-  
-  // PhilHealth Compliance (eClaims 3.0)
   memberPIN?: string;
   patientPIN?: string;
   membershipType?: MembershipType;
   relationshipToMember?: RelationToMember;
-  
-  // Clinical Data (DOH/NHDR)
   chiefComplaint?: string;
-  vitals?: {
-    bpSystolic?: number;
-    bpDiastolic?: number;
-    temp?: number;
-    weight?: number;
-    height?: number;
-  };
-  diagnosisCode?: string; // ICD-10
+  diagnosisCode?: string;
   diagnosisDescription?: string;
-  
-  // System Fields
   status: SyncStatus;
   createdAt: number;
   updatedAt: number;
+}
+
+export interface Room {
+  id?: number;
+  name: string;
+  type: 'WARD' | 'SEMI_PRIVATE' | 'PRIVATE' | 'ICU';
+  rate: number;
+}
+
+export interface Bed {
+  id?: number;
+  roomId: number;
+  name: string;
+  status: 'VACANT' | 'OCCUPIED' | 'CLEANING';
+}
+
+export interface Admission {
+  id?: number;
+  patientId: number;
+  bedId: number;
+  admissionDate: number;
+  dischargeDate?: number;
+  status: 'ADMITTED' | 'DISCHARGED' | 'CANCELLED';
+  dietaryReq?: string;
+}
+
+export interface MedicalOrder {
+  id?: number;
+  patientId: number;
+  type: 'MEDICATION' | 'LABORATORY' | 'RADIOLOGY';
+  item: string;
+  inventoryId?: number;
+  quantity: number;
+  instructions?: string;
+  status: 'PENDING' | 'FILLED' | 'CANCELLED';
+  orderedBy: string;
+  createdAt: number;
+}
+
+export interface Procedure {
+  id?: number;
+  patientId: number;
+  rvsCode: string;
+  description: string;
+  procedureDate: number;
+  surgeon: string;
+  anesthesiologist?: string;
+  findings?: string;
+  status: 'COMPLETED' | 'CANCELLED';
+  createdAt: number;
 }
 
 export interface InventoryItem {
@@ -59,23 +95,29 @@ export interface StockBatch {
 export interface BillingRecord {
   id?: number;
   patientId: number;
-  encounterId: number;
+  encounterId?: number;
   status: 'unpaid' | 'paid' | 'void';
   philhealthBenefit: number;
+  hmoCoverage: number;
+  hmoProvider?: string;
   seniorDiscount: number;
+  vatExemption: number;
   totalActualCharges: number;
   netAmount: number;
+  amountPaid: number;
   createdAt: number;
+  updatedAt: number;
 }
 
 export interface BillingItem {
   id?: number;
   billingId: number;
-  inventoryId?: number; // Null if it's a service (e.g., Room, PF)
+  inventoryId?: number;
   serviceName: string;
   quantity: number;
   unitPrice: number;
   subtotal: number;
+  type: 'MEDICINE' | 'ROOM' | 'LAB' | 'PF';
 }
 
 export class HISDatabase extends Dexie {
@@ -84,22 +126,31 @@ export class HISDatabase extends Dexie {
   stocks!: Table<StockBatch>;
   billing!: Table<BillingRecord>;
   billingItems!: Table<BillingItem>;
+  rooms!: Table<Room>;
+  beds!: Table<Bed>;
+  admissions!: Table<Admission>;
+  orders!: Table<MedicalOrder>;
+  procedures!: Table<Procedure>;
 
   constructor() {
     super('HISDatabase');
-    this.version(3).stores({
+    this.version(7).stores({
       patients: '++id, status, lastName, patientPIN, memberPIN, diagnosisCode',
       inventory: '++id, name, genericName, pndfCode',
       stocks: '++id, inventoryId, expiryDate',
       billing: '++id, patientId, encounterId, status',
-      billingItems: '++id, billingId, inventoryId'
+      billingItems: '++id, billingId, inventoryId, type',
+      rooms: '++id, name, type',
+      beds: '++id, roomId, status',
+      admissions: '++id, patientId, bedId, status',
+      orders: '++id, patientId, type, status',
+      procedures: '++id, patientId, rvsCode, status'
     });
   }
 }
 
 export const db = new HISDatabase();
 
-// Helper to save/update record
 export async function savePatientRecord(record: Omit<PatientRecord, 'id' | 'status' | 'createdAt' | 'updatedAt'>) {
   return await db.patients.add({
     ...record,
