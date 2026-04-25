@@ -1,0 +1,87 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Patient {
+  id                   Int       @id @default(autoincrement())
+  firstName            String
+  lastName             String
+  middleName           String?
+  extensionName        String?
+  birthDate            String
+  sex                  String
+  memberPIN            String?
+  patientPIN           String?
+  membershipType       String?
+  relationshipToMember String?
+  chiefComplaint       String?
+  diagnosisCode        String?
+  diagnosisDescription String?
+  status               String    @default("draft")
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+  vitals               Vitals?
+  billing              Billing[]
+}
+
+model Vitals {
+  id          Int     @id @default(autoincrement())
+  patientId   Int     @unique
+  patient     Patient @relation(fields: [patientId], references: [id])
+  bpSystolic  Int?
+  bpDiastolic Int?
+  temp        Float?
+  weight      Float?
+  height      Float?
+}
+
+model Inventory {
+  id              Int            @id @default(autoincrement())
+  name            String
+  genericName     String?
+  pndfCode        String?
+  vatExempt       Boolean        @default(true)
+  isDangerousDrug Boolean        @default(false)
+  basePrice       Float
+  stocks          StockBatch[]
+  billingItems    BillingItem[]
+}
+
+model StockBatch {
+  id          Int       @id @default(autoincrement())
+  inventoryId Int
+  inventory   Inventory @relation(fields: [inventoryId], references: [id])
+  batchNumber String
+  expiryDate  String
+  quantity    Int
+}
+
+model Billing {
+  id                 Int           @id @default(autoincrement())
+  patientId          Int
+  patient            Patient       @relation(fields: [patientId], references: [id])
+  status             String        @default("unpaid")
+  philhealthBenefit  Float         @default(0)
+  seniorDiscount     Float         @default(0)
+  totalActualCharges Float         @default(0)
+  netAmount          Float         @default(0)
+  createdAt          DateTime      @default(now())
+  items              BillingItem[]
+}
+
+model BillingItem {
+  id          Int        @id @default(autoincrement())
+  billingId   Int
+  billing     Billing    @relation(fields: [billingId], references: [id])
+  inventoryId Int?
+  inventory   Inventory? @relation(fields: [inventoryId], references: [id])
+  serviceName String
+  quantity    Int
+  unitPrice   Float
+  subtotal    Float
+}
