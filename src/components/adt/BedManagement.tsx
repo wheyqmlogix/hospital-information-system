@@ -187,12 +187,13 @@ export default function BedManagement() {
                         {transferMode ? '→ TRANSFER HERE' : 'AVAILABLE'}
                       </p>
                     )}
-                  </div>
-                );
-              })}
+                    </div>
+                  );
+                })}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* Admission Modal */}
