@@ -796,25 +796,25 @@ export default function PatientDetailPage({ params }: { params: { id: string } }
                 </div>
               </div>
             </TabsContent>
-          </Card>
-          </div>
-          </div>
+          </Tabs>
+        </div>
+      </div>
 
-          <AdmissionForm 
-          open={isAdmissionFormOpen} 
-          onOpenChange={setIsAdmissionFormOpen} 
-          patient={patient} 
-          />
+      <AdmissionForm 
+        open={isAdmissionFormOpen} 
+        onOpenChange={setIsAdmissionFormOpen} 
+        patient={patient} 
+      />
 
-          {activeAdmission && (
-          <DischargeForm 
+      {activeAdmission && (
+        <DischargeForm 
           open={isDischargeFormOpen} 
           onOpenChange={setIsDischargeFormOpen} 
           admissionId={activeAdmission.id} 
           patientName={`${patient.firstName} ${patient.lastName}`}
-          />
-          )}
-          </div>
-          );
-          }
+        />
+      )}
+    </div>
+  );
+}
 
