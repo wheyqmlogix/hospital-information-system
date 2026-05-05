@@ -68,7 +68,16 @@ export async function createAdmission(data: unknown) {
           dpaConsentTimestamp: dpaConsent ? now : null,
           status: "ADMITTED",
           admittedAt: now,
-          // admission is linked to bed via bed.admissionId
+        }
+      });
+
+      // Initialize Billing Record for this admission
+      await tx.billingRecord.create({
+        data: {
+          patientId,
+          admissionId: admission.id,
+          description: `Inpatient charges for ${admittingDiagnosis}`,
+          status: "UNPAID",
         }
       });
 

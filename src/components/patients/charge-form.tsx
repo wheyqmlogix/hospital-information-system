@@ -23,6 +23,7 @@ import {
 import { hospitalServices } from "@/lib/billing/utils";
 import { toast } from "sonner";
 import { Plus, Receipt, Loader2 } from "lucide-react";
+import { recordCharge } from "@/app/api/billing/charge-actions";
 
 export function ChargeForm({ 
   open, 
@@ -46,15 +47,31 @@ export function ChargeForm({
   const quantity = watch("quantity");
 
   const onSubmit = async (data: any) => {
-    setLoading(true);
-    // In a real app, this would call an API to add a charge to the billing record
-    // For now, we simulate success
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    if (!selectedService) return;
     
-    toast.success(`Charged ${data.quantity}x ${data.serviceName} to patient.`);
-    onOpenChange(false);
-    reset();
-    setLoading(false);
+    setLoading(true);
+    try {
+      const result = await recordCharge({
+        patientId: patient.id,
+        serviceName: selectedService.name,
+        category: selectedService.category,
+        quantity: data.quantity,
+        unitPrice: selectedService.price,
+        isVatable: true, // Defaulting for now
+      });
+
+      if (result.success) {
+        toast.success(`Charged ${data.quantity}x ${selectedService.name} to patient.`);
+        onOpenChange(false);
+        reset();
+      } else {
+        toast.error(result.error || "Failed to add charge.");
+      }
+    } catch (error) {
+      toast.error("An error occurred.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

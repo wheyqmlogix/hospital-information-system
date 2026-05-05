@@ -1,5 +1,6 @@
 import prisma from "@/lib/prisma";
 import { toZonedTime } from "date-fns-tz";
+import { Decimal } from "@prisma/client/runtime/library";
 
 const TIMEZONE = "Asia/Manila";
 
@@ -25,7 +26,8 @@ export async function processDischarge(data: {
             radRequests: { where: { status: { not: "COMPLETED" } } }
           }
         },
-        bed: true
+        bed: { include: { room: true } },
+        billingRecords: { where: { status: "UNPAID" } }
       }
     });
 
@@ -40,8 +42,31 @@ export async function processDischarge(data: {
       throw new Error(`Cannot discharge: ${admission.patient.radRequests.length} pending radiology results.`);
     }
 
-    // 3. Transaction to ensure atomicity
+    // 3. Calculate Room & Board Charges
+    const stayDurationMs = now.getTime() - admission.admittedAt.getTime();
+    const stayDurationDays = Math.max(1, Math.ceil(stayDurationMs / (1000 * 60 * 60 * 24)));
+    
+    // Simplified price logic based on room type
+    const roomRate = admission.bed?.room.type === "PRIVATE" ? 2500 : 1500;
+    const roomBoardTotal = new Decimal(roomRate).times(stayDurationDays);
+
+    // 4. Transaction to ensure atomicity
     const result = await prisma.$transaction(async (tx) => {
+      // Add Room & Board to the active BillingRecord
+      if (admission.billingRecords.length > 0) {
+        await tx.billingItem.create({
+          data: {
+            billingRecordId: admission.billingRecords[0].id,
+            serviceName: `Room & Board (${admission.bed?.room.roomNumber})`,
+            category: "ACCOMMODATION",
+            quantity: stayDurationDays,
+            unitPrice: new Decimal(roomRate),
+            totalAmount: roomBoardTotal,
+            isVatable: true
+          }
+        });
+      }
+
       // Update Admission status and clinical summary
       const updatedAdmission = await tx.admission.update({
         where: { id: data.admissionId },
