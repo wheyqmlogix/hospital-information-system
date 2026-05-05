@@ -2,7 +2,8 @@
 
 import prisma from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
-import { Decimal } from "@prisma/client/runtime/library";
+import { Prisma } from "@prisma/client";
+const Decimal = Prisma.Decimal;
 import { z } from "zod";
 
 const PaymentSchema = z.object({
@@ -50,7 +51,7 @@ export async function recordPayment(data: unknown) {
       const newBalance = new Decimal(billingRecord.totalAmount).minus(newPaidAmount);
       
       let newStatus = "PARTIAL";
-      if (newBalance.lessThanOrEqual(0)) {
+      if (newBalance.lte(0)) {
         newStatus = "PAID";
       }
 

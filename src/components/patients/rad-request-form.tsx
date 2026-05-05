@@ -74,7 +74,7 @@ export function RadRequestForm({
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 py-4">
           <div className="space-y-2">
             <Label htmlFor="procedure">Procedure Name</Label>
-            <Select onValueChange={(val) => setValue("procedureName", val)}>
+            <Select onValueChange={(val) => setValue("procedureName", val as any)}>
               <SelectTrigger>
                 <SelectValue placeholder="Select a procedure" />
               </SelectTrigger>

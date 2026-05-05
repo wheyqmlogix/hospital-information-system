@@ -26,7 +26,7 @@ const AdmissionSchema = z.object({
   admittingDiagnosis: z.string().min(3, "Diagnosis is too short"),
   roomNumber: z.string().min(1, "Room number is required"),
   ward: z.string().optional(),
-  isPhilHealthMember: z.boolean().default(false),
+  isPhilHealthMember: z.boolean(),
   philHealthPIN: z.string().optional(),
   dpaConsent: z.boolean().refine(val => val === true, {
     message: "Data Privacy Act consent is mandatory."

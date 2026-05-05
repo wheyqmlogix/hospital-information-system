@@ -1,6 +1,7 @@
 import prisma from "@/lib/prisma";
 import { toZonedTime } from "date-fns-tz";
-import { Decimal } from "@prisma/client/runtime/library";
+import { Prisma } from "@prisma/client";
+const Decimal = Prisma.Decimal;
 
 const TIMEZONE = "Asia/Manila";
 

@@ -21,7 +21,7 @@ import { issuePromissoryNote } from "@/app/api/billing/actions";
 import { Loader2, FileText, Scale, CalendarIcon } from "lucide-react";
 
 const PromissorySchema = z.object({
-  initialPayment: z.coerce.number().min(0, "Initial payment must be 0 or more"),
+  initialPayment: z.number().min(0, "Initial payment must be 0 or more"),
   dueDate: z.string().min(1, "Due date is required"),
   reason: z.string().min(5, "Reason is too short"),
   guarantorName: z.string().min(3, "Guarantor name is required"),
@@ -94,7 +94,7 @@ export function PromissoryNoteForm({ open, onOpenChange, billingRecordId, totalB
                 type="number"
                 step="0.01"
                 placeholder="0.00"
-                {...register("initialPayment")}
+                {...register("initialPayment", { valueAsNumber: true })}
               />
             </div>
             <div className="space-y-2">

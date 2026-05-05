@@ -27,7 +27,7 @@ import { recordPayment } from "@/app/api/billing/actions";
 import { Loader2, Banknote, CreditCard, Receipt } from "lucide-react";
 
 const PaymentSchema = z.object({
-  amount: z.coerce.number().positive("Amount must be positive"),
+  amount: z.number().positive("Amount must be positive"),
   method: z.enum(["CASH", "CARD", "CHEQUE", "ONLINE"]),
   referenceNumber: z.string().optional(),
 });
@@ -103,7 +103,7 @@ export function PaymentForm({ open, onOpenChange, billingRecordId, maxAmount }: 
                 step="0.01"
                 className={`pl-7 ${errors.amount ? "border-red-500" : ""}`}
                 placeholder={maxAmount.toFixed(2)}
-                {...register("amount")}
+                {...register("amount", { valueAsNumber: true })}
               />
             </div>
             {errors.amount && (

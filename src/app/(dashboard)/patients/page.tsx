@@ -160,9 +160,15 @@ export default function PatientsPage() {
                             >
                               <FileText className="h-4 w-4" />
                             </Link>
-                            <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-slate-600">
+                            <Link 
+                              href={`/patients/${patient.id}/edit`}
+                              className={cn(
+                                buttonVariants({ variant: "ghost", size: "icon" }),
+                                "h-8 w-8 text-slate-400 hover:text-slate-600"
+                              )}
+                            >
                               <Edit2 className="h-4 w-4" />
-                            </Button>
+                            </Link>
                           </div>
                         </TableCell>
                       </TableRow>

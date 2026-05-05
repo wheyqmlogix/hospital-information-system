@@ -91,7 +91,7 @@ export function ChargeForm({
           <div className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="service">Service / Item</Label>
-              <Select onValueChange={(val) => setValue("serviceName", val)}>
+              <Select onValueChange={(val) => setValue("serviceName", val as any)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select a service" />
                 </SelectTrigger>

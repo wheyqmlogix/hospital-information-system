@@ -111,7 +111,7 @@ export function ClaimForm({
 
                 <div className="space-y-2">
                   <Label htmlFor="diagnosis">Principal Diagnosis (ICD-10)</Label>
-                  <Select onValueChange={(val) => setValue("diagnosis", val)}>
+                  <Select onValueChange={(val) => setValue("diagnosis", val as any)}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select ICD-10 Code" />
                     </SelectTrigger>
@@ -127,7 +127,7 @@ export function ClaimForm({
 
                 <div className="space-y-2">
                   <Label htmlFor="procedure">Primary Procedure (RVS)</Label>
-                  <Select onValueChange={(val) => setValue("procedure", val)}>
+                  <Select onValueChange={(val) => setValue("procedure", val as any)}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select RVS Code" />
                     </SelectTrigger>

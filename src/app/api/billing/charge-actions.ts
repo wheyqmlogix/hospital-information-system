@@ -2,7 +2,8 @@
 
 import prisma from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
-import { Decimal } from "@prisma/client/runtime/library";
+import { Prisma } from "@prisma/client";
+const Decimal = Prisma.Decimal;
 import { z } from "zod";
 
 const ChargeSchema = z.object({

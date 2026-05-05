@@ -30,7 +30,9 @@ import {
   FlaskConical,
   Image as ImageIcon,
   Sparkles,
-  AlertTriangle
+  AlertTriangle,
+  LogOut,
+  Edit
 } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
@@ -66,7 +68,7 @@ import { calculateDiscounts, PatientCategory } from "@/lib/billing/utils";
 import { aiAuditor } from "@/lib/intelligence/auditor";
 import { cn } from "@/lib/utils";
 
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 
 const statusStyles = {
   INPATIENT: "bg-blue-100 text-blue-700 border-blue-200",
@@ -77,7 +79,9 @@ const statusStyles = {
   DECEASED: "bg-slate-100 text-slate-700 border-slate-200",
 };
 
-export default function PatientDetailPage({ params }: { params: { id: string } }) {
+export default function PatientDetailPage() {
+  const params = useParams();
+  const id = params.id as string;
   const [isClaimFormOpen, setIsClaimFormOpen] = useState(false);
   const [isChargeFormOpen, setIsChargeFormOpen] = useState(false);
   const [isPrescriptionFormOpen, setIsPrescriptionFormOpen] = useState(false);
@@ -89,9 +93,9 @@ export default function PatientDetailPage({ params }: { params: { id: string } }
   const router = useRouter();
   
   const { data: patient, isLoading, isError } = useQuery({
-    queryKey: ["patient", params.id],
+    queryKey: ["patient", id],
     queryFn: async () => {
-      const res = await fetch(`/api/patients/${params.id}`);
+      const res = await fetch(`/api/patients/${id}`);
       if (!res.ok) throw new Error("Failed to fetch patient");
       return res.json();
     },
@@ -151,6 +155,13 @@ export default function PatientDetailPage({ params }: { params: { id: string } }
           </div>
         </div>
         <div className="flex space-x-2">
+          <Link 
+            href={`/patients/${id}/edit`}
+            className={cn(buttonVariants({ variant: "outline" }))}
+          >
+            <Edit className="h-4 w-4 mr-2" />
+            Edit Patient
+          </Link>
           {patient.status !== "INPATIENT" ? (
             <Button className="bg-blue-600 hover:bg-blue-700" onClick={() => setIsAdmissionFormOpen(true)}>
               <Plus className="h-4 w-4 mr-2" />
@@ -354,7 +365,7 @@ export default function PatientDetailPage({ params }: { params: { id: string } }
                       <div className="text-center py-8 bg-slate-50 rounded-lg border-2 border-dashed border-slate-200">
                         <Activity className="h-8 w-8 text-slate-300 mx-auto mb-2" />
                         <p className="text-sm text-slate-400">No recent vitals recorded</p>
-                        <Button variant="link" size="sm" className="text-blue-600 mt-2" onClick={() => router.push(`/patients/${params.id}/notes/new`)}>
+                        <Button variant="link" size="sm" className="text-blue-600 mt-2" onClick={() => router.push(`/patients/${id}/notes/new`)}>
                           Add Vitals
                         </Button>
                       </div>
@@ -400,7 +411,7 @@ export default function PatientDetailPage({ params }: { params: { id: string } }
                   <Button 
                     size="sm" 
                     className="bg-blue-600 hover:bg-blue-700"
-                    onClick={() => router.push(`/patients/${params.id}/notes/new`)}
+                    onClick={() => router.push(`/patients/${id}/notes/new`)}
                   >
                     <Plus className="h-4 w-4 mr-2" />
                     New Note

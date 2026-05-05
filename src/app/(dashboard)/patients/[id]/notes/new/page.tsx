@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,15 +18,17 @@ import {
 import { toast } from "sonner";
 import { ArrowLeft, Save, Loader2, Stethoscope, Activity } from "lucide-react";
 
-export default function NewClinicalNotePage({ params }: { params: { id: string } }) {
+export default function NewClinicalNotePage() {
+  const params = useParams();
+  const id = params.id as string;
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const queryClient = useQueryClient();
   
   const { data: patient } = useQuery({
-    queryKey: ["patient", params.id],
+    queryKey: ["patient", id],
     queryFn: async () => {
-      const res = await fetch(`/api/patients/${params.id}`);
+      const res = await fetch(`/api/patients/${id}`);
       if (!res.ok) throw new Error("Failed to fetch patient");
       return res.json();
     },
@@ -56,8 +58,8 @@ export default function NewClinicalNotePage({ params }: { params: { id: string }
       await new Promise(resolve => setTimeout(resolve, 1000));
       
       toast.success("Clinical note and vitals saved successfully.");
-      queryClient.invalidateQueries({ queryKey: ["patient", params.id] });
-      router.push(`/patients/${params.id}`);
+      queryClient.invalidateQueries({ queryKey: ["patient", id] });
+      router.push(`/patients/${id}`);
     } catch {
       toast.error("An error occurred during submission.");
     } finally {

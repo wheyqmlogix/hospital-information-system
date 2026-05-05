@@ -133,7 +133,7 @@ export default function NewStaffPage() {
               <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
                 <div className="space-y-2">
                   <Label>Clinical/Staff Role</Label>
-                  <Select onValueChange={(val) => setValue("roleName", val)}>
+                  <Select onValueChange={(val) => setValue("roleName", val as any)}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select a role" />
                     </SelectTrigger>
@@ -148,7 +148,7 @@ export default function NewStaffPage() {
                 </div>
                 <div className="space-y-2">
                   <Label>Primary Department</Label>
-                  <Select onValueChange={(val) => setValue("departmentName", val)}>
+                  <Select onValueChange={(val) => setValue("departmentName", val as any)}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select a department" />
                     </SelectTrigger>

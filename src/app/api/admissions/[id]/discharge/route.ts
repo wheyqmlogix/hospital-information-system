@@ -10,7 +10,7 @@ const DischargeSchema = z.object({
 
 export async function PATCH(
   req: Request, 
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { id } = await params;
@@ -31,7 +31,7 @@ export async function PATCH(
     }
   } catch (error: any) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: error.errors }, { status: 400 });
+      return NextResponse.json({ error: error.issues }, { status: 400 });
     }
     return NextResponse.json({ error: "Discharge Failed" }, { status: 500 });
   }

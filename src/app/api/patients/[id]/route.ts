@@ -3,11 +3,12 @@ import prisma from "@/lib/prisma";
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const patient = await prisma.patient.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         appointments: { orderBy: { appointmentDate: "desc" } },
         billingRecords: { 
@@ -40,12 +41,31 @@ export async function GET(
 
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const data = await request.json();
+    const { id } = await params;
+    const body = await request.json();
+    
+    // Sanitize data: remove non-editable fields and relations
+    const { 
+      id: _, 
+      patientId: __, 
+      createdAt: ___, 
+      updatedAt: ____,
+      appointments,
+      admissions,
+      billingRecords,
+      clinicalNotes,
+      prescriptions,
+      assignedBed,
+      labRequests,
+      radRequests,
+      ...data 
+    } = body;
+
     const patient = await prisma.patient.update({
-      where: { id: params.id },
+      where: { id },
       data: {
         ...data,
         dateOfBirth: data.dateOfBirth ? new Date(data.dateOfBirth) : undefined,

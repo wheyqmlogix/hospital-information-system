@@ -77,7 +77,7 @@ export function LabRequestForm({
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 py-4">
           <div className="space-y-2">
             <Label htmlFor="test">Test Name</Label>
-            <Select onValueChange={(val) => setValue("testName", val)}>
+            <Select onValueChange={(val) => setValue("testName", val as any)}>
               <SelectTrigger>
                 <SelectValue placeholder="Select a test" />
               </SelectTrigger>
