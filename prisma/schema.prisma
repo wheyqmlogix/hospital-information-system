@@ -263,3 +263,88 @@ model Bed {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
+
+model User {
+  id              String           @id @default(cuid())
+  name            String
+  email           String           @unique
+  passwordHash    String
+  licenseNumber   String?          @unique // Professional ID for doctors/nurses
+  specialization  String?          // Cardiology, Pediatrics, etc.
+  status          String           @default("ACTIVE") // ACTIVE, INACTIVE, SUSPENDED
+  lastLogin       DateTime?
+  
+  roleId          String
+  role            Role             @relation(fields: [roleId], references: [id])
+  
+  primaryDepartmentId String?
+  primaryDepartment   Department?  @relation("PrimaryDepartment", fields: [primaryDepartmentId], references: [id])
+  
+  departments     UserDepartment[]
+  auditLogs       AuditLog[]       @relation("UserAuditLogs")
+  performedActions AuditLog[]      @relation("PerformedActions")
+  
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+}
+
+model Role {
+  id              String           @id @default(cuid())
+  name            String           @unique // SuperAdmin, Doctor, Nurse, Staff
+  description     String?
+  permissions     Permission[]
+  users           User[]
+  
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+}
+
+model Permission {
+  id              String           @id @default(cuid())
+  code            String           @unique // can_prescribe, can_view_records, etc.
+  description     String?
+  roles           Role[]
+  
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+}
+
+model Department {
+  id              String           @id @default(cuid())
+  name            String           @unique // ER, OPD, Laboratory, Pharmacy, etc.
+  description     String?
+  primaryUsers    User[]           @relation("PrimaryDepartment")
+  users           UserDepartment[]
+  
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+}
+
+model UserDepartment {
+  userId          String
+  user            User             @relation(fields: [userId], references: [id])
+  departmentId    String
+  department      Department       @relation(fields: [departmentId], references: [id])
+  isHead          Boolean          @default(false)
+  
+  @@id([userId, departmentId])
+}
+
+model AuditLog {
+  id              String           @id @default(cuid())
+  action          String           // CREATE, UPDATE, DELETE, LOGIN, LOGOUT
+  table           String?          // User, Patient, ClinicalNote, etc.
+  recordId        String?
+  changes         Json?            // Store before/after state
+  
+  userId          String?          // The user who was affected (optional)
+  user            User?            @relation("UserAuditLogs", fields: [userId], references: [id])
+  
+  performedById   String?          // The user who performed the action
+  performedBy     User?            @relation("PerformedActions", fields: [performedById], references: [id])
+  
+  ipAddress       String?
+  userAgent       String?
+  
+  createdAt       DateTime         @default(now())
+}

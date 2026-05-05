@@ -9,7 +9,9 @@ import {
   Clock, 
   ArrowRight,
   ShieldCheck,
-  Bell
+  Bell,
+  CheckCircle2,
+  FileCheck
 } from "lucide-react";
 import { 
   Card, 
@@ -156,5 +158,3 @@ export default function PatientPortalPage() {
   );
 }
 
-// Missing imports
-import { CheckCircle2, FileCheck } from "lucide-react";

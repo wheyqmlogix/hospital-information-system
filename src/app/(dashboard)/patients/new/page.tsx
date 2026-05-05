@@ -2,16 +2,10 @@
 
 import { useState } from "react";
 import { useForm } from "react-hook-form";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle, 
-  DialogFooter 
-} from "@/components/ui/dialog";
 import { 
   Select, 
   SelectContent, 
@@ -19,16 +13,24 @@ import {
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select";
+import { 
+  Card, 
+  CardContent, 
+  CardHeader, 
+  CardTitle,
+  CardDescription
+} from "@/components/ui/card";
 import { addToSyncQueue } from "@/lib/offline/sync-queue";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { ArrowLeft, Save, UserPlus, Loader2 } from "lucide-react";
 
-export function PatientForm({ open, onOpenChange }: { open: boolean, onOpenChange: (open: boolean) => void }) {
+export default function NewPatientPage() {
   const [loading, setLoading] = useState(false);
+  const router = useRouter();
   const queryClient = useQueryClient();
-  const { register, handleSubmit, reset, setValue, watch } = useForm({
+  const { register, handleSubmit, setValue } = useForm({
     defaultValues: {
       nationality: "Filipino",
       civilStatus: "SINGLE",
@@ -39,16 +41,14 @@ export function PatientForm({ open, onOpenChange }: { open: boolean, onOpenChang
     setLoading(true);
     const patientData = {
       ...data,
-      patientId: `PT-${Math.floor(1000 + Math.random() * 9000)}`, // Improved Temp ID
+      patientId: `PT-${Math.floor(1000 + Math.random() * 9000)}`,
       status: "OUTPATIENT",
     };
 
     if (!navigator.onLine) {
       await addToSyncQueue("CREATE_PATIENT", patientData);
       toast.success("Saved locally. Will sync when online.");
-      onOpenChange(false);
-      reset();
-      setLoading(false);
+      router.push("/patients");
       return;
     }
 
@@ -62,13 +62,12 @@ export function PatientForm({ open, onOpenChange }: { open: boolean, onOpenChang
       if (response.ok) {
         toast.success("Patient record created successfully.");
         queryClient.invalidateQueries({ queryKey: ["patients"] });
-        onOpenChange(false);
-        reset();
+        router.push("/patients");
       } else {
         const error = await response.json();
         toast.error(error.error || "Failed to create patient.");
       }
-    } catch (error) {
+    } catch {
       toast.error("An error occurred during submission.");
     } finally {
       setLoading(false);
@@ -76,23 +75,34 @@ export function PatientForm({ open, onOpenChange }: { open: boolean, onOpenChang
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] h-[90vh] flex flex-col p-0">
-        <DialogHeader className="p-6 pb-0">
-          <DialogTitle className="text-2xl">Register New Patient</DialogTitle>
-        </DialogHeader>
-        
-        <form onSubmit={handleSubmit(onSubmit)} className="flex-1 flex flex-col overflow-hidden">
-          <ScrollArea className="flex-1 p-6">
+    <div className="max-w-4xl mx-auto space-y-6 pb-12">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-4">
+          <Button variant="ghost" size="icon" onClick={() => router.back()}>
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <div>
+            <h1 className="text-3xl font-bold text-slate-900">Register New Patient</h1>
+            <p className="text-slate-500">Create a new Master Patient Index (MPI) record.</p>
+          </div>
+        </div>
+      </div>
+
+      <form onSubmit={handleSubmit(onSubmit)}>
+        <Card className="border-none shadow-sm">
+          <CardHeader className="border-b border-slate-50">
             <Tabs defaultValue="basic" className="w-full">
-              <TabsList className="grid w-full grid-cols-3 mb-6">
+              <TabsList className="grid w-full max-w-md grid-cols-3">
                 <TabsTrigger value="basic">Basic Info</TabsTrigger>
                 <TabsTrigger value="address">Address</TabsTrigger>
                 <TabsTrigger value="id">IDs & Other</TabsTrigger>
               </TabsList>
-
-              <TabsContent value="basic" className="space-y-4 mt-0">
-                <div className="grid grid-cols-2 gap-4">
+            </Tabs>
+          </CardHeader>
+          <CardContent className="p-8">
+            <Tabs defaultValue="basic">
+              <TabsContent value="basic" className="space-y-6 mt-0">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <Label htmlFor="firstName">First Name</Label>
                     <Input id="firstName" {...register("firstName", { required: true })} placeholder="Juan" />
@@ -101,14 +111,10 @@ export function PatientForm({ open, onOpenChange }: { open: boolean, onOpenChang
                     <Label htmlFor="lastName">Last Name</Label>
                     <Input id="lastName" {...register("lastName", { required: true })} placeholder="Dela Cruz" />
                   </div>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="middleName">Middle Name (Optional)</Label>
-                  <Input id="middleName" {...register("middleName")} placeholder="Santos" />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="middleName">Middle Name (Optional)</Label>
+                    <Input id="middleName" {...register("middleName")} placeholder="Santos" />
+                  </div>
                   <div className="space-y-2">
                     <Label htmlFor="dateOfBirth">Date of Birth</Label>
                     <Input id="dateOfBirth" type="date" {...register("dateOfBirth", { required: true })} />
@@ -126,9 +132,6 @@ export function PatientForm({ open, onOpenChange }: { open: boolean, onOpenChang
                       </SelectContent>
                     </Select>
                   </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="civilStatus">Civil Status</Label>
                     <Select defaultValue="SINGLE" onValueChange={(value) => setValue("civilStatus", value)}>
@@ -164,12 +167,12 @@ export function PatientForm({ open, onOpenChange }: { open: boolean, onOpenChang
                 </div>
               </TabsContent>
 
-              <TabsContent value="address" className="space-y-4 mt-0">
+              <TabsContent value="address" className="space-y-6 mt-0">
                 <div className="space-y-2">
                   <Label htmlFor="address">Street / House No.</Label>
                   <Input id="address" {...register("address")} placeholder="123 Mabini St." />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <Label htmlFor="barangay">Barangay</Label>
                     <Input id="barangay" {...register("barangay")} placeholder="Brgy. 123" />
@@ -178,8 +181,6 @@ export function PatientForm({ open, onOpenChange }: { open: boolean, onOpenChang
                     <Label htmlFor="city">City / Municipality</Label>
                     <Input id="city" {...register("city")} placeholder="Quezon City" />
                   </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="province">Province</Label>
                     <Input id="province" {...register("province")} placeholder="Metro Manila" />
@@ -189,27 +190,27 @@ export function PatientForm({ open, onOpenChange }: { open: boolean, onOpenChang
                     <Input id="zipCode" {...register("zipCode")} placeholder="1100" />
                   </div>
                 </div>
-                <div className="space-y-2 pt-2">
-                  <Label className="text-slate-500 text-xs uppercase font-bold">Contact Information</Label>
-                  <div className="grid grid-cols-2 gap-4">
+                <div className="pt-4 border-t border-slate-100">
+                  <h4 className="text-sm font-bold text-slate-400 uppercase mb-4">Contact Details</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
                       <Label htmlFor="mobileNumber">Mobile Number</Label>
                       <Input id="mobileNumber" {...register("mobileNumber")} placeholder="0917XXXXXXX" />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="email">Email (Optional)</Label>
+                      <Label htmlFor="email">Email Address</Label>
                       <Input id="email" type="email" {...register("email")} placeholder="juan@example.com" />
                     </div>
                   </div>
                 </div>
               </TabsContent>
 
-              <TabsContent value="id" className="space-y-4 mt-0">
-                <div className="space-y-2">
-                  <Label htmlFor="philHealthId">PhilHealth ID</Label>
-                  <Input id="philHealthId" {...register("philHealthId")} placeholder="12-345678901-2" />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
+              <TabsContent value="id" className="space-y-6 mt-0">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="philHealthId">PhilHealth ID</Label>
+                    <Input id="philHealthId" {...register("philHealthId")} placeholder="12-345678901-2" />
+                  </div>
                   <div className="space-y-2">
                     <Label htmlFor="nationalId">National ID (PhilSys)</Label>
                     <Input id="nationalId" {...register("nationalId")} placeholder="XXXX-XXXX-XXXX-XXXX" />
@@ -218,8 +219,6 @@ export function PatientForm({ open, onOpenChange }: { open: boolean, onOpenChang
                     <Label htmlFor="seniorCitizenId">Senior Citizen ID</Label>
                     <Input id="seniorCitizenId" {...register("seniorCitizenId")} placeholder="SC-XXXXXX" />
                   </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="pwdId">PWD ID</Label>
                     <Input id="pwdId" {...register("pwdId")} placeholder="PWD-XXXXXX" />
@@ -228,8 +227,6 @@ export function PatientForm({ open, onOpenChange }: { open: boolean, onOpenChang
                     <Label htmlFor="nationality">Nationality</Label>
                     <Input id="nationality" {...register("nationality")} placeholder="Filipino" />
                   </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="religion">Religion</Label>
                     <Input id="religion" {...register("religion")} placeholder="Roman Catholic" />
@@ -241,16 +238,28 @@ export function PatientForm({ open, onOpenChange }: { open: boolean, onOpenChang
                 </div>
               </TabsContent>
             </Tabs>
-          </ScrollArea>
 
-          <DialogFooter className="p-6 border-t border-slate-100">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-            <Button type="submit" disabled={loading} className="bg-blue-600 hover:bg-blue-700">
-              {loading ? "Registering..." : "Register Patient"}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+            <div className="flex items-center justify-end space-x-4 mt-12 pt-8 border-t border-slate-100">
+              <Button type="button" variant="outline" onClick={() => router.back()}>
+                Cancel
+              </Button>
+              <Button type="submit" className="bg-blue-600 hover:bg-blue-700 min-w-[150px]" disabled={loading}>
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <Save className="mr-2 h-4 w-4" />
+                    Save Patient Record
+                  </>
+                )}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </form>
+    </div>
   );
 }

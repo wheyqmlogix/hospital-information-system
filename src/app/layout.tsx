@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { Sidebar } from "@/components/layout/sidebar";
-import { Header } from "@/components/layout/header";
 import Providers from "./providers";
 import { SyncManager } from "@/components/layout/sync-manager";
 import { Toaster } from "@/components/ui/sonner";
@@ -18,14 +16,14 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "CarePoint HIS",
+  title: "Cliniq HIS",
   description: "Modern Hospital Information System",
   manifest: "/manifest.json",
   themeColor: "#2563eb",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "CarePoint HIS",
+    title: "Cliniq HIS",
   },
 };
 
@@ -39,15 +37,9 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="h-full flex overflow-hidden bg-slate-50">
+      <body className="h-full bg-slate-50">
         <Providers>
-          <Sidebar />
-          <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-            <Header />
-            <main className="flex-1 overflow-y-auto p-8">
-              {children}
-            </main>
-          </div>
+          {children}
           <SyncManager />
           <Toaster position="top-right" />
         </Providers>

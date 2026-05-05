@@ -1,6 +1,6 @@
 import { openDB } from "idb";
 
-const DB_NAME = "carepoint-his-offline";
+const DB_NAME = "Cliniq-his-offline";
 const STORE_NAME = "sync-queue";
 
 export async function getDB() {

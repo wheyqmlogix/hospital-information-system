@@ -7,7 +7,6 @@ import {
   Filter,
   Download,
   FileText,
-  Trash2,
   Edit2,
   Loader2
 } from "lucide-react";
@@ -30,7 +29,7 @@ import {
 } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
-import { PatientForm } from "@/components/patients/patient-form";
+import { useRouter } from "next/navigation";
 
 const statusStyles = {
   INPATIENT: "bg-blue-100 text-blue-700 border-blue-200",
@@ -43,7 +42,7 @@ const statusStyles = {
 
 export default function PatientsPage() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [isFormOpen, setIsFormOpen] = useState(false);
+  const router = useRouter();
 
   const { data: patients = [], isLoading, isError } = useQuery({
     queryKey: ["patients"],
@@ -74,15 +73,13 @@ export default function PatientsPage() {
           </Button>
           <Button 
             className="bg-blue-600 hover:bg-blue-700 text-white"
-            onClick={() => setIsFormOpen(true)}
+            onClick={() => router.push("/patients/new")}
           >
             <Plus className="mr-2 h-4 w-4" />
             Add New Patient
           </Button>
         </div>
       </div>
-
-      <PatientForm open={isFormOpen} onOpenChange={setIsFormOpen} />
 
       <Card className="border-none shadow-sm">
         <CardHeader className="pb-3">

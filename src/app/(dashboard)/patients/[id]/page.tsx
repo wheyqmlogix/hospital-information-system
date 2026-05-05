@@ -56,12 +56,13 @@ import {
 import { EligibilityChecker } from "@/components/insurance/eligibility-checker";
 import { ClaimForm } from "@/components/patients/claim-form";
 import { ChargeForm } from "@/components/patients/charge-form";
-import { ClinicalNoteForm } from "@/components/patients/clinical-note-form";
 import { PrescriptionForm } from "@/components/patients/prescription-form";
 import { LabRequestForm } from "@/components/patients/lab-request-form";
 import { RadRequestForm } from "@/components/patients/rad-request-form";
 import { calculateDiscounts, PatientCategory } from "@/lib/billing/utils";
 import { aiAuditor } from "@/lib/intelligence/auditor";
+
+import { useRouter } from "next/navigation";
 
 const statusStyles = {
   INPATIENT: "bg-blue-100 text-blue-700 border-blue-200",
@@ -75,10 +76,10 @@ const statusStyles = {
 export default function PatientDetailPage({ params }: { params: { id: string } }) {
   const [isClaimFormOpen, setIsClaimFormOpen] = useState(false);
   const [isChargeFormOpen, setIsChargeFormOpen] = useState(false);
-  const [isNoteFormOpen, setIsNoteFormOpen] = useState(false);
   const [isPrescriptionFormOpen, setIsPrescriptionFormOpen] = useState(false);
   const [isLabFormOpen, setIsLabFormOpen] = useState(false);
   const [isRadFormOpen, setIsRadFormOpen] = useState(false);
+  const router = useRouter();
   
   const { data: patient, isLoading, isError } = useQuery({
     queryKey: ["patient", params.id],
@@ -299,7 +300,7 @@ export default function PatientDetailPage({ params }: { params: { id: string } }
                       <div className="text-center py-8 bg-slate-50 rounded-lg border-2 border-dashed border-slate-200">
                         <Activity className="h-8 w-8 text-slate-300 mx-auto mb-2" />
                         <p className="text-sm text-slate-400">No recent vitals recorded</p>
-                        <Button variant="link" size="sm" className="text-blue-600 mt-2" onClick={() => setIsNoteFormOpen(true)}>
+                        <Button variant="link" size="sm" className="text-blue-600 mt-2" onClick={() => router.push(`/patients/${params.id}/notes/new`)}>
                           Add Vitals
                         </Button>
                       </div>
@@ -345,21 +346,15 @@ export default function PatientDetailPage({ params }: { params: { id: string } }
                   <Button 
                     size="sm" 
                     className="bg-blue-600 hover:bg-blue-700"
-                    onClick={() => setIsNoteFormOpen(true)}
+                    onClick={() => router.push(`/patients/${params.id}/notes/new`)}
                   >
                     <Plus className="h-4 w-4 mr-2" />
                     New Note
                   </Button>
                 </CardHeader>
                 <CardContent>
-                  <ClinicalNoteForm 
-                    open={isNoteFormOpen} 
-                    onOpenChange={setIsNoteFormOpen} 
-                    patient={patient} 
-                  />
-                  
-                  {patient.clinicalNotes?.length > 0 ? (
-                    <div className="space-y-8">
+
+                  {patient.clinicalNotes?.length > 0 ? (                    <div className="space-y-8">
                       {patient.clinicalNotes.map((note: any) => {
                         const audit = aiAuditor.auditClinicalNote(note);
                         return (

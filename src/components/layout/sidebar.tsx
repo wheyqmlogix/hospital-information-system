@@ -33,7 +33,7 @@ export function Sidebar() {
     <div className="flex h-full w-64 flex-col bg-white border-r border-slate-200">
       <div className="flex h-16 items-center px-6 border-b border-slate-200">
         <Activity className="h-8 w-8 text-blue-600" />
-        <span className="ml-2 text-xl font-bold text-slate-900 tracking-tight">CarePoint</span>
+        <span className="ml-2 text-xl font-bold text-slate-900 tracking-tight">Cliniq</span>
       </div>
       <nav className="flex-1 space-y-1 px-3 py-4">
         {navigation.map((item) => {

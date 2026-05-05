@@ -1,6 +1,6 @@
 {
-  "name": "CarePoint HIS",
-  "short_name": "CarePoint",
+  "name": "Cliniq HIS",
+  "short_name": "Cliniq",
   "description": "Modern Hospital Information System",
   "start_url": "/",
   "display": "standalone",
