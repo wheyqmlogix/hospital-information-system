@@ -1,65 +1,200 @@
-import Image from "next/image";
+import { 
+  Users, 
+  Calendar, 
+  BedDouble, 
+  TrendingUp,
+  Clock,
+  CheckCircle2,
+  AlertCircle
+} from "lucide-react";
+import { 
+  Card, 
+  CardContent, 
+  CardDescription, 
+  CardHeader, 
+  CardTitle 
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { BedBoard } from "@/components/layout/bed-board";
 
-export default function Home() {
+const stats = [
+  { 
+    name: "Total Patients", 
+    value: "2,543", 
+    change: "+12.5%", 
+    trend: "up",
+    icon: Users,
+    color: "text-blue-600",
+    bg: "bg-blue-100"
+  },
+  { 
+    name: "Active Appointments", 
+    value: "156", 
+    change: "+4.2%", 
+    trend: "up",
+    icon: Calendar,
+    color: "text-teal-600",
+    bg: "bg-teal-100"
+  },
+  { 
+    name: "Available Beds", 
+    value: "42", 
+    change: "-2.1%", 
+    trend: "down",
+    icon: BedDouble,
+    color: "text-purple-600",
+    bg: "bg-purple-100"
+  },
+  { 
+    name: "Revenue (Today)", 
+    value: "₱62,450", 
+    change: "+18.2%", 
+    trend: "up",
+    icon: TrendingUp,
+    color: "text-amber-600",
+    bg: "bg-amber-100"
+  },
+];
+
+const recentActivities = [
+  {
+    id: 1,
+    patient: "John Doe",
+    type: "Admission",
+    time: "2 hours ago",
+    status: "Completed",
+    icon: CheckCircle2,
+    iconColor: "text-green-500"
+  },
+  {
+    id: 2,
+    patient: "Alice Smith",
+    type: "Lab Result",
+    time: "3 hours ago",
+    status: "Pending",
+    icon: Clock,
+    iconColor: "text-amber-500"
+  },
+  {
+    id: 3,
+    patient: "Robert Johnson",
+    type: "Emergency",
+    time: "5 hours ago",
+    status: "Urgent",
+    icon: AlertCircle,
+    iconColor: "text-red-500"
+  },
+];
+
+export default function Dashboard() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div className="space-y-8">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-slate-900">Hospital Overview</h1>
+          <p className="text-slate-500 mt-1">Welcome back, Dr. Wilson. Here&apos;s what&apos;s happening today.</p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+        <div className="flex items-center space-x-2">
+          <Badge variant="outline" className="bg-white text-slate-500 border-slate-200 py-1.5 px-3">
+            <Clock className="h-3.5 w-3.5 mr-2" />
+            Tuesday, May 5, 2026
+          </Badge>
         </div>
-      </main>
+      </div>
+
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        {stats.map((stat) => (
+          <Card key={stat.name} className="border-none shadow-sm overflow-hidden">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div className={`${stat.bg} p-3 rounded-xl`}>
+                  <stat.icon className={`h-6 w-6 ${stat.color}`} />
+                </div>
+                <Badge variant="outline" className={
+                  stat.trend === "up" 
+                    ? "bg-green-50 text-green-700 border-green-200" 
+                    : "bg-red-50 text-red-700 border-red-200"
+                }>
+                  {stat.change}
+                </Badge>
+              </div>
+              <div className="mt-4">
+                <p className="text-sm font-medium text-slate-500">{stat.name}</p>
+                <h3 className="text-2xl font-bold text-slate-900 mt-1">{stat.value}</h3>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-xl font-bold text-slate-900">Bed Occupancy Board</h2>
+            <p className="text-sm text-slate-500 mt-1">Real-time status of all hospital rooms and beds.</p>
+          </div>
+          <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-1.5">
+              <div className="h-2 w-2 rounded-full bg-green-500" />
+              <span className="text-xs text-slate-500">Available</span>
+            </div>
+            <div className="flex items-center space-x-1.5">
+              <div className="h-2 w-2 rounded-full bg-blue-500" />
+              <span className="text-xs text-slate-500">Occupied</span>
+            </div>
+            <Badge variant="outline" className="ml-4 bg-blue-50 text-blue-700 border-blue-200">
+              Total Occupancy: 68%
+            </Badge>
+          </div>
+        </div>
+        <BedBoard />
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <Card className="lg:col-span-2 border-none shadow-sm">
+          <CardHeader>
+            <CardTitle>Patient Admissions Trend</CardTitle>
+            <CardDescription>Number of patients admitted over the last 7 days.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="h-[300px] flex items-center justify-center bg-slate-50 rounded-lg border-2 border-dashed border-slate-200">
+              <div className="text-center">
+                <TrendingUp className="h-10 w-10 text-slate-300 mx-auto" />
+                <p className="text-slate-400 mt-2">Analytics Chart Placeholder</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-none shadow-sm">
+          <CardHeader>
+            <CardTitle>Recent Activity</CardTitle>
+            <CardDescription>Latest updates from across the hospital.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-6">
+              {recentActivities.map((activity) => (
+                <div key={activity.id} className="flex items-start space-x-4">
+                  <div className={`mt-1 ${activity.iconColor}`}>
+                    <activity.icon className="h-5 w-5" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-slate-900">
+                      {activity.patient}
+                    </p>
+                    <p className="text-sm text-slate-500">
+                      {activity.type} • {activity.status}
+                    </p>
+                    <p className="text-xs text-slate-400 mt-1 text-right">
+                      {activity.time}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

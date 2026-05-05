@@ -1,0 +1,265 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum PatientStatus {
+  INPATIENT
+  OUTPATIENT
+  EMERGENCY
+  OBSERVATION
+  RECOVERED
+  DECEASED
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+model Patient {
+  id              String        @id @default(cuid())
+  patientId       String        @unique // e.g., PT-001
+  philHealthId    String?       @unique
+  nationalId      String?       @unique
+  seniorCitizenId String?       @unique
+  pwdId           String?       @unique
+  firstName       String
+  middleName      String?
+  lastName        String
+  dateOfBirth     DateTime
+  gender          Gender
+  status          PatientStatus @default(OUTPATIENT)
+  civilStatus     String?       // SINGLE, MARRIED, WIDOWED, SEPARATED
+  nationality     String        @default("Filipino")
+  religion        String?
+  occupation      String?
+  
+  // Structured Address (Philippine Context)
+  address         String?       // Full address or street details
+  barangay        String?
+  city            String?
+  province        String?
+  zipCode         String?
+  
+  mobileNumber    String?
+  email           String?
+  bloodType       String?
+  allergies       String?
+  emergencyContact String?
+  emergencyNumber  String?
+  
+  appointments    Appointment[]
+  billingRecords  BillingRecord[]
+  clinicalNotes   ClinicalNote[]
+  prescriptions   Prescription[]
+  assignedBed     Bed?
+  labRequests     LabRequest[]
+  radRequests     RadiologyRequest[]
+  
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+}
+
+model LabRequest {
+  id              String        @id @default(cuid())
+  patientId       String
+  patient         Patient       @relation(fields: [patientId], references: [id])
+  testName        String
+  category        String        // HEMATOLOGY, CHEMISTRY, etc.
+  doctorName      String
+  status          String        @default("PENDING") // PENDING, IN_PROGRESS, COMPLETED, CANCELLED
+  results         String?       @db.Text
+  completedAt     DateTime?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+}
+
+model RadiologyRequest {
+  id              String        @id @default(cuid())
+  patientId       String
+  patient         Patient       @relation(fields: [patientId], references: [id])
+  procedureName   String
+  type            String        // XRAY, ULTRASOUND, CT, MRI
+  doctorName      String
+  status          String        @default("PENDING")
+  findings        String?       @db.Text
+  impression      String?       @db.Text
+  completedAt     DateTime?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+}
+
+model InventoryItem {
+  id              String             @id @default(cuid())
+  name            String
+  genericName     String?
+  sku             String             @unique
+  category        String             // PHARMACY, MEDICAL_SUPPLY, OFFICE_SUPPLY
+  unit            String             // Tablet, Bottle, Piece, etc.
+  currentStock    Int                @default(0)
+  minStockLevel   Int                @default(10)
+  transactions    StockTransaction[]
+  
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+}
+
+model StockTransaction {
+  id              String        @id @default(cuid())
+  itemId          String
+  item            InventoryItem @relation(fields: [itemId], references: [id])
+  type            String        // IN (Purchase/Return), OUT (Dispense/Wastage)
+  quantity        Int
+  batchNumber     String?
+  expiryDate      DateTime?
+  referenceId     String?       // e.g., PrescriptionId or PO ID
+  notes           String?
+  
+  createdAt       DateTime      @default(now())
+}
+
+model Appointment {
+  id              String        @id @default(cuid())
+  patientId       String
+  patient         Patient       @relation(fields: [patientId], references: [id])
+  doctorName      String
+  appointmentDate DateTime
+  reason          String?
+  status          String        @default("SCHEDULED") // SCHEDULED, COMPLETED, CANCELLED
+  
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+}
+
+model BillingRecord {
+  id              String        @id @default(cuid())
+  patientId       String
+  patient         Patient       @relation(fields: [patientId], references: [id])
+  description     String?
+  items           BillingItem[]
+  totalAmount     Decimal       @default(0) @db.Decimal(10, 2)
+  philHealthShare Decimal       @default(0) @db.Decimal(10, 2)
+  hmoShare        Decimal       @default(0) @db.Decimal(10, 2)
+  discountTotal   Decimal       @default(0) @db.Decimal(10, 2)
+  patientShare    Decimal       @default(0) @db.Decimal(10, 2)
+  status          String        @default("UNPAID") // UNPAID, PARTIAL, PAID
+  
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+}
+
+model BillingItem {
+  id              String        @id @default(cuid())
+  billingRecordId String
+  billingRecord   BillingRecord @relation(fields: [billingRecordId], references: [id])
+  serviceName     String
+  category        String?       // ACCOMMODATION, LABORATORY, etc.
+  quantity        Int           @default(1)
+  unitPrice       Decimal       @db.Decimal(10, 2)
+  totalAmount     Decimal       @db.Decimal(10, 2)
+  
+  createdAt       DateTime      @default(now())
+}
+
+model Service {
+  id          String        @id @default(cuid())
+  name        String        @unique
+  category    String        // ACCOMMODATION, LABORATORY, PHARMACY, PROFESSIONAL_FEE
+  basePrice   Decimal       @db.Decimal(10, 2)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+}
+
+model ClinicalNote {
+  id              String        @id @default(cuid())
+  patientId       String
+  patient         Patient       @relation(fields: [patientId], references: [id])
+  doctorName      String
+
+  // SOAP Notes
+  subjective      String?       @db.Text
+  objective       String?       @db.Text
+  assessment      String?       @db.Text
+  plan            String?       @db.Text
+  diagnosis       String?
+  icd10Code       String?
+
+  // Vitals
+  bloodPressure   String?       // e.g., 120/80
+  temperature     Decimal?      @db.Decimal(4, 1) // e.g., 37.5
+  heartRate       Int?          // bpm
+  respiratoryRate Int?          // cpm
+  oxygenSaturation Int?         // %
+  weight          Decimal?      @db.Decimal(5, 2) // kg
+  height          Decimal?      @db.Decimal(5, 2) // cm
+
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+}
+
+model Prescription {
+  id              String             @id @default(cuid())
+  patientId       String
+  patient         Patient            @relation(fields: [patientId], references: [id])
+  doctorName      String
+  items           PrescriptionItem[]
+  notes           String?
+  status          String             @default("ACTIVE") // ACTIVE, COMPLETED, CANCELLED
+
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+}
+
+model PrescriptionItem {
+  id              String       @id @default(cuid())
+  prescriptionId  String
+  prescription    Prescription @relation(fields: [prescriptionId], references: [id])
+  medicationName  String
+  dosage          String       // e.g., 500mg
+  frequency       String       // e.g., 3x a day
+  duration        String?      // e.g., 7 days
+  instructions    String?
+
+  createdAt       DateTime     @default(now())
+}
+
+model Medication {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  genericName String
+  form        String   // Tablet, Syrup, Injection, etc.
+  strength    String   // 500mg, 5ml/100mg, etc.
+  category    String?
+  createdAt   DateTime @default(now())
+}
+
+model Room {
+  id          String   @id @default(cuid())
+  roomNumber  String   @unique
+  type        String   // PRIVATE, SEMI-PRIVATE, WARD, ICU, ER
+  floor       String?
+  beds        Bed[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Bed {
+  id          String   @id @default(cuid())
+  bedNumber   String
+  roomId      String
+  room        Room     @relation(fields: [roomId], references: [id])
+  status      String   @default("AVAILABLE") // AVAILABLE, OCCUPIED, MAINTENANCE, CLEANING
+  patientId   String?  @unique
+  patient     Patient? @relation(fields: [patientId], references: [id])
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
