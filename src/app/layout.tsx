@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Providers from "./providers";
-import { SyncManager } from "@/components/layout/sync-manager";
 import { Toaster } from "@/components/ui/sonner";
 
 const geistSans = Geist({
@@ -40,7 +39,6 @@ export default function RootLayout({
       <body className="h-full bg-slate-50">
         <Providers>
           {children}
-          <SyncManager />
           <Toaster position="top-right" />
         </Providers>
       </body>

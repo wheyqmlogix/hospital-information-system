@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/prisma";
+import prisma from "@/lib/prisma";
 import { toZonedTime } from "date-fns-tz";
 
 const TIMEZONE = "Asia/Manila";
