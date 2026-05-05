@@ -19,7 +19,8 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { createAdmission } from "@/app/api/admissions/actions";
-import { Loader2, ShieldCheck, CreditCard } from "lucide-react";
+import { Loader2, ShieldCheck, CreditCard, WifiOff } from "lucide-react";
+import { db } from "@/lib/offline/db";
 
 const AdmissionSchema = z.object({
   admittingDiagnosis: z.string().min(3, "Diagnosis is too short"),
@@ -66,6 +67,36 @@ export function AdmissionForm({ open, onOpenChange, patient }: AdmissionFormProp
 
   const onSubmit = async (data: AdmissionFormValues) => {
     setLoading(true);
+
+    // OFFLINE BRANCH
+    if (!navigator.onLine) {
+      try {
+        await db.admissions.add({
+          id: crypto.randomUUID(),
+          patientId: patient.id,
+          patientName: `${patient.firstName} ${patient.lastName}`,
+          ...data,
+          status: 'ADMITTED',
+          dpaConsentTimestamp: Date.now(),
+          createdAt: Date.now(),
+        });
+        
+        toast.info("Admission saved locally.", {
+          description: "No internet connection. Data will sync automatically when online.",
+          icon: <WifiOff className="h-4 w-4 text-amber-500" />
+        });
+        
+        onOpenChange(false);
+        reset();
+      } catch (err) {
+        toast.error("Failed to save offline.");
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
+
+    // ONLINE BRANCH
     try {
       const result = await createAdmission({
         ...data,
