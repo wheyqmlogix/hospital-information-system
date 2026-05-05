@@ -34,7 +34,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { 
@@ -64,6 +64,7 @@ import { DischargeForm } from "@/components/admissions/discharge-form";
 import { BillingSummary } from "@/components/admissions/billing-summary";
 import { calculateDiscounts, PatientCategory } from "@/lib/billing/utils";
 import { aiAuditor } from "@/lib/intelligence/auditor";
+import { cn } from "@/lib/utils";
 
 import { useRouter } from "next/navigation";
 
@@ -113,12 +114,13 @@ export default function PatientDetailPage({ params }: { params: { id: string } }
         <p className="text-slate-500 mt-2 max-w-md">
           We couldn&apos;t find the patient record you&apos;re looking for. It might have been deleted or moved.
         </p>
-        <Button variant="outline" className="mt-6" asChild>
-          <Link href="/patients">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Patients
-          </Link>
-        </Button>
+        <Link 
+          href="/patients"
+          className={cn(buttonVariants({ variant: "outline" }), "mt-6")}
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back to Patients
+        </Link>
       </div>
     );
   }
@@ -131,11 +133,12 @@ export default function PatientDetailPage({ params }: { params: { id: string } }
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
-          <Button variant="ghost" size="icon" asChild>
-            <Link href="/patients">
-              <ArrowLeft className="h-5 w-5" />
-            </Link>
-          </Button>
+          <Link 
+            href="/patients"
+            className={cn(buttonVariants({ variant: "ghost", size: "icon" }), "h-9 w-9")}
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Link>
           <div>
             <h1 className="text-2xl font-bold text-slate-900">{patient.firstName} {patient.lastName}</h1>
             <div className="flex items-center space-x-3 mt-1">

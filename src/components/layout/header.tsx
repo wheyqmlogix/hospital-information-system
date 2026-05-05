@@ -37,19 +37,17 @@ export function Header() {
         
         <div className="flex items-center pl-4 border-l border-slate-200">
           <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button className="flex items-center space-x-3 hover:bg-slate-50 p-1.5 rounded-lg transition-colors">
-                <div className="text-right hidden sm:block">
-                  <p className="text-sm font-semibold text-slate-900">{session?.user?.name || "Loading..."}</p>
-                  <p className="text-xs text-slate-500">{session?.user?.role || "Staff"}</p>
-                </div>
-                <Avatar className="h-9 w-9 border border-slate-200">
-                  <AvatarImage src={session?.user?.image || ""} />
-                  <AvatarFallback className="bg-blue-100 text-blue-700 font-medium uppercase">
-                    {session?.user?.name ? session.user.name.split(" ").map(n => n[0]).join("") : "U"}
-                  </AvatarFallback>
-                </Avatar>
-              </button>
+            <DropdownMenuTrigger className="flex items-center space-x-3 hover:bg-slate-50 p-1.5 rounded-lg transition-colors">
+              <div className="text-right hidden sm:block">
+                <p className="text-sm font-semibold text-slate-900">{session?.user?.name || "Loading..."}</p>
+                <p className="text-xs text-slate-500">{session?.user?.role || "Staff"}</p>
+              </div>
+              <Avatar className="h-9 w-9 border border-slate-200">
+                <AvatarImage src={session?.user?.image || ""} />
+                <AvatarFallback className="bg-blue-100 text-blue-700 font-medium uppercase">
+                  {session?.user?.name ? session.user.name.split(" ").map(n => n[0]).join("") : "U"}
+                </AvatarFallback>
+              </Avatar>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
               <DropdownMenuLabel>My Account</DropdownMenuLabel>

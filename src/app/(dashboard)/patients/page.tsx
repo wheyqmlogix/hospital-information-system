@@ -10,26 +10,16 @@ import {
   Edit2,
   Loader2
 } from "lucide-react";
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { 
-  Card, 
-  CardContent, 
-  CardHeader
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { cn } from "@/lib/utils";
 
 const statusStyles = {
   INPATIENT: "bg-blue-100 text-blue-700 border-blue-200",
@@ -161,11 +151,15 @@ export default function PatientsPage() {
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end space-x-2">
-                            <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-blue-600" asChild>
-                              <Link href={`/patients/${patient.id}`}>
-                                <FileText className="h-4 w-4" />
-                              </Link>
-                            </Button>
+                            <Link 
+                              href={`/patients/${patient.id}`}
+                              className={cn(
+                                buttonVariants({ variant: "ghost", size: "icon" }),
+                                "h-8 w-8 text-slate-400 hover:text-blue-600"
+                              )}
+                            >
+                              <FileText className="h-4 w-4" />
+                            </Link>
                             <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-slate-600">
                               <Edit2 className="h-4 w-4" />
                             </Button>
