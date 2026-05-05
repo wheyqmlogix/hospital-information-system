@@ -59,6 +59,9 @@ import { ChargeForm } from "@/components/patients/charge-form";
 import { PrescriptionForm } from "@/components/patients/prescription-form";
 import { LabRequestForm } from "@/components/patients/lab-request-form";
 import { RadRequestForm } from "@/components/patients/rad-request-form";
+import { AdmissionForm } from "@/components/admissions/admission-form";
+import { DischargeForm } from "@/components/admissions/discharge-form";
+import { BillingSummary } from "@/components/admissions/billing-summary";
 import { calculateDiscounts, PatientCategory } from "@/lib/billing/utils";
 import { aiAuditor } from "@/lib/intelligence/auditor";
 
@@ -79,6 +82,9 @@ export default function PatientDetailPage({ params }: { params: { id: string } }
   const [isPrescriptionFormOpen, setIsPrescriptionFormOpen] = useState(false);
   const [isLabFormOpen, setIsLabFormOpen] = useState(false);
   const [isRadFormOpen, setIsRadFormOpen] = useState(false);
+  const [isAdmissionFormOpen, setIsAdmissionFormOpen] = useState(false);
+  const [isDischargeFormOpen, setIsDischargeFormOpen] = useState(false);
+
   const router = useRouter();
   
   const { data: patient, isLoading, isError } = useQuery({
@@ -117,28 +123,73 @@ export default function PatientDetailPage({ params }: { params: { id: string } }
     );
   }
 
+  // Find active admission
+  const activeAdmission = patient.admissions?.find((a: any) => a.status === "ADMITTED");
+  const pendingBillingAdmission = patient.admissions?.find((a: any) => a.status === "PENDING_BILLING");
+
   return (
     <div className="space-y-6">
-      <div className="flex items-center space-x-4">
-        <Button variant="ghost" size="icon" asChild>
-          <Link href="/patients">
-            <ArrowLeft className="h-5 w-5" />
-          </Link>
-        </Button>
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">{patient.firstName} {patient.lastName}</h1>
-          <div className="flex items-center space-x-3 mt-1">
-            <span className="text-sm font-medium text-slate-500">{patient.patientId}</span>
-            <span className="text-slate-300">•</span>
-            <Badge variant="outline" className={statusStyles[patient.status as keyof typeof statusStyles]}>
-              {patient.status}
-            </Badge>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-4">
+          <Button variant="ghost" size="icon" asChild>
+            <Link href="/patients">
+              <ArrowLeft className="h-5 w-5" />
+            </Link>
+          </Button>
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900">{patient.firstName} {patient.lastName}</h1>
+            <div className="flex items-center space-x-3 mt-1">
+              <span className="text-sm font-medium text-slate-500">{patient.patientId}</span>
+              <span className="text-slate-300">•</span>
+              <Badge variant="outline" className={statusStyles[patient.status as keyof typeof statusStyles]}>
+                {patient.status}
+              </Badge>
+            </div>
           </div>
+        </div>
+        <div className="flex space-x-2">
+          {patient.status !== "INPATIENT" ? (
+            <Button className="bg-blue-600 hover:bg-blue-700" onClick={() => setIsAdmissionFormOpen(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Admit Patient
+            </Button>
+          ) : (
+            <Button variant="destructive" onClick={() => setIsDischargeFormOpen(true)}>
+              <LogOut className="h-4 w-4 mr-2" />
+              Discharge Clearance
+            </Button>
+          )}
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-1 space-y-6">
+          {/* Journey Status Card */}
+          {activeAdmission && (
+            <Card className="border-none shadow-sm bg-blue-50 border-l-4 border-l-blue-600">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-bold text-blue-900 flex items-center">
+                  <Activity className="h-4 w-4 mr-2" />
+                  Active Inpatient Stay
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <div className="flex justify-between text-xs">
+                  <span className="text-blue-700">Room / Bed</span>
+                  <span className="font-bold text-blue-900">{activeAdmission.roomNumber} {activeAdmission.ward && `• ${activeAdmission.ward}`}</span>
+                </div>
+                <div className="flex justify-between text-xs">
+                  <span className="text-blue-700">Admitted At</span>
+                  <span className="font-medium text-blue-900">{new Date(activeAdmission.admittedAt).toLocaleString()}</span>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {pendingBillingAdmission && (
+            <BillingSummary admissionId={pendingBillingAdmission.id} patientId={patient.id} />
+          )}
+
           <Card className="border-none shadow-sm">
             <CardContent className="pt-6">
               <div className="flex flex-col items-center text-center">
@@ -742,9 +793,25 @@ export default function PatientDetailPage({ params }: { params: { id: string } }
                 </div>
               </div>
             </TabsContent>
-          </Tabs>
-        </div>
-      </div>
-    </div>
-  );
-}
+          </Card>
+          </div>
+          </div>
+
+          <AdmissionForm 
+          open={isAdmissionFormOpen} 
+          onOpenChange={setIsAdmissionFormOpen} 
+          patient={patient} 
+          />
+
+          {activeAdmission && (
+          <DischargeForm 
+          open={isDischargeFormOpen} 
+          onOpenChange={setIsDischargeFormOpen} 
+          admissionId={activeAdmission.id} 
+          patientName={`${patient.firstName} ${patient.lastName}`}
+          />
+          )}
+          </div>
+          );
+          }
+

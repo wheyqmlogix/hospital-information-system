@@ -18,6 +18,13 @@ enum PatientStatus {
   DECEASED
 }
 
+enum AdmissionStatus {
+  ADMITTED
+  DISCHARGED
+  PENDING_BILLING
+  CANCELLED
+}
+
 enum Gender {
   MALE
   FEMALE
@@ -57,15 +64,46 @@ model Patient {
   emergencyNumber  String?
   
   appointments    Appointment[]
+  admissions      Admission[]
   billingRecords  BillingRecord[]
   clinicalNotes   ClinicalNote[]
   prescriptions   Prescription[]
-  assignedBed     Bed?
+  assignedBed     Bed?          @relation("PatientBed")
   labRequests     LabRequest[]
   radRequests     RadiologyRequest[]
   
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
+}
+
+model Admission {
+  id                String          @id @default(cuid())
+  patientId         String
+  patient           Patient         @relation(fields: [patientId], references: [id])
+  admittedAt        DateTime        @default(now())
+  dischargedAt      DateTime?
+  admittingDiagnosis String
+  finalDiagnosis    String?
+  homeMedications   String?
+  followUpInstructions String?
+  roomNumber        String
+  ward              String?
+  
+  // PhilHealth
+  isPhilHealthMember Boolean        @default(false)
+  philHealthPIN     String?
+  
+  // Compliance
+  dpaConsentTimestamp DateTime?
+  
+  status            AdmissionStatus @default(ADMITTED)
+  
+  // Relationships
+  billingRecords    BillingRecord[]
+  bed               Bed?
+  
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
 }
 
 model LabRequest {
@@ -143,14 +181,22 @@ model BillingRecord {
   id              String        @id @default(cuid())
   patientId       String
   patient         Patient       @relation(fields: [patientId], references: [id])
+  admissionId     String?
+  admission       Admission?    @relation(fields: [admissionId], references: [id])
   description     String?
   items           BillingItem[]
-  totalAmount     Decimal       @default(0) @db.Decimal(10, 2)
+  
+  // Financials
+  grossAmount     Decimal       @default(0) @db.Decimal(10, 2)
   philHealthShare Decimal       @default(0) @db.Decimal(10, 2)
+  caseRateAmount  Decimal       @default(0) @db.Decimal(10, 2)
   hmoShare        Decimal       @default(0) @db.Decimal(10, 2)
   discountTotal   Decimal       @default(0) @db.Decimal(10, 2)
+  vatExemptAmount Decimal       @default(0) @db.Decimal(10, 2)
   patientShare    Decimal       @default(0) @db.Decimal(10, 2)
-  status          String        @default("UNPAID") // UNPAID, PARTIAL, PAID
+  totalAmount     Decimal       @default(0) @db.Decimal(10, 2) // Net Amount Due
+  
+  status          String        @default("UNPAID") // UNPAID, PARTIAL, PAID, PROMISSORY
   
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
@@ -161,10 +207,11 @@ model BillingItem {
   billingRecordId String
   billingRecord   BillingRecord @relation(fields: [billingRecordId], references: [id])
   serviceName     String
-  category        String?       // ACCOMMODATION, LABORATORY, etc.
+  category        String?       // ACCOMMODATION, LABORATORY, PHARMACY, etc.
   quantity        Int           @default(1)
   unitPrice       Decimal       @db.Decimal(10, 2)
   totalAmount     Decimal       @db.Decimal(10, 2)
+  isVatable       Boolean       @default(true)
   
   createdAt       DateTime      @default(now())
 }
@@ -174,6 +221,7 @@ model Service {
   name        String        @unique
   category    String        // ACCOMMODATION, LABORATORY, PHARMACY, PROFESSIONAL_FEE
   basePrice   Decimal       @db.Decimal(10, 2)
+  isVatable   Boolean       @default(true)
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
 }
@@ -238,6 +286,8 @@ model Medication {
   form        String   // Tablet, Syrup, Injection, etc.
   strength    String   // 500mg, 5ml/100mg, etc.
   category    String?
+  basePrice   Decimal? @db.Decimal(10, 2)
+  isVatable   Boolean  @default(true)
   createdAt   DateTime @default(now())
 }
 
@@ -257,8 +307,12 @@ model Bed {
   roomId      String
   room        Room     @relation(fields: [roomId], references: [id])
   status      String   @default("AVAILABLE") // AVAILABLE, OCCUPIED, MAINTENANCE, CLEANING
+  
   patientId   String?  @unique
-  patient     Patient? @relation(fields: [patientId], references: [id])
+  patient     Patient? @relation("PatientBed", fields: [patientId], references: [id])
+  
+  admissionId String?  @unique
+  admission   Admission? @relation(fields: [admissionId], references: [id])
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
