@@ -83,11 +83,15 @@ export async function calculateAdmissionBill(admissionId: string, hospitalLevel:
 
   // Return a structured JSON object
   return {
+    billingRecordId: admission.billingRecords[0]?.id,
     GrossAmount: grossTotal.toFixed(2),
     PhilHealthDeduction: philHealthDeduction.toFixed(2),
     VATExemption: vatExemptionAmount.toFixed(2),
     DiscountAmount: discountAmount.toFixed(2),
     NetAmountDue: netAmountDue.greaterThan(0) ? netAmountDue.toFixed(2) : "0.00",
+    PaidAmount: admission.billingRecords[0]?.paidAmount.toFixed(2) || "0.00",
+    BalanceAmount: admission.billingRecords[0]?.balanceAmount.toFixed(2) || netAmountDue.toFixed(2),
+    Status: admission.billingRecords[0]?.status || "UNPAID",
     Metadata: {
       isPhilHealthApplied: philHealthDeduction.greaterThan(0),
       isDiscountApplied: discountAmount.greaterThan(0),
