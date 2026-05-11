@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { BedBoard } from "@/components/layout/bed-board";
+import Link from "next/link";
 
 const stats = [
   { 
@@ -91,11 +92,11 @@ export default function Dashboard() {
     <div className="space-y-8">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900">Hospital Overview</h1>
-          <p className="text-slate-500 mt-1">Welcome back, Dr. Wilson. Here&apos;s what&apos;s happening today.</p>
+          <h1 className="text-2xl md:text-3xl font-bold text-slate-900">Hospital Overview</h1>
+          <p className="text-sm md:text-base text-slate-500 mt-1">Welcome back, Dr. Wilson. Here&apos;s what&apos;s happening today.</p>
         </div>
         <div className="flex items-center space-x-2">
-          <Badge variant="outline" className="bg-white text-slate-500 border-slate-200 py-1.5 px-3">
+          <Badge variant="outline" className="bg-white text-slate-500 border-slate-200 py-1.5 px-3 text-xs md:text-sm">
             <Clock className="h-3.5 w-3.5 mr-2" />
             Tuesday, May 5, 2026
           </Badge>
@@ -104,26 +105,32 @@ export default function Dashboard() {
 
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
         {stats.map((stat) => (
-          <Card key={stat.name} className="border-none shadow-sm overflow-hidden">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div className={`${stat.bg} p-3 rounded-xl`}>
-                  <stat.icon className={`h-6 w-6 ${stat.color}`} />
+          <Link 
+            key={stat.name} 
+            href={stat.name === "Total Patients" ? "/patients" : stat.name === "Available Beds" ? "/admissions" : "#"}
+            className="block"
+          >
+            <Card className="border-none shadow-sm overflow-hidden hover:ring-2 hover:ring-blue-500/20 transition-all">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div className={`${stat.bg} p-3 rounded-xl`}>
+                    <stat.icon className={`h-6 w-6 ${stat.color}`} />
+                  </div>
+                  <Badge variant="outline" className={
+                    stat.trend === "up" 
+                      ? "bg-green-50 text-green-700 border-green-200" 
+                      : "bg-red-50 text-red-700 border-red-200"
+                  }>
+                    {stat.change}
+                  </Badge>
                 </div>
-                <Badge variant="outline" className={
-                  stat.trend === "up" 
-                    ? "bg-green-50 text-green-700 border-green-200" 
-                    : "bg-red-50 text-red-700 border-red-200"
-                }>
-                  {stat.change}
-                </Badge>
-              </div>
-              <div className="mt-4">
-                <p className="text-sm font-medium text-slate-500">{stat.name}</p>
-                <h3 className="text-2xl font-bold text-slate-900 mt-1">{stat.value}</h3>
-              </div>
-            </CardContent>
-          </Card>
+                <div className="mt-4">
+                  <p className="text-sm font-medium text-slate-500">{stat.name}</p>
+                  <h3 className="text-2xl font-bold text-slate-900 mt-1">{stat.value}</h3>
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
         ))}
       </div>
 

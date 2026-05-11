@@ -9,31 +9,41 @@ import {
   CreditCard, 
   Settings, 
   Activity,
-  UserRound,
   BarChart3,
-  Globe
+  X
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navigation = [
   { name: "Dashboard", href: "/", icon: LayoutDashboard },
   { name: "Patients", href: "/patients", icon: Users },
+  { name: "Admissions", href: "/admissions", icon: Activity },
   { name: "Analytics", href: "/analytics", icon: BarChart3 },
   { name: "Appointments", href: "/appointments", icon: Calendar },
   { name: "Billing", href: "/billing", icon: CreditCard },
-  { name: "Patient Portal", href: "/portal", icon: Globe },
-  { name: "Staff", href: "/staff", icon: UserRound },
   { name: "Settings", href: "/settings", icon: Settings },
 ];
 
-export function Sidebar() {
+interface SidebarProps {
+  onClose?: () => void;
+}
+
+export function Sidebar({ onClose }: SidebarProps) {
   const pathname = usePathname();
 
   return (
     <div className="flex h-full w-64 flex-col bg-white border-r border-slate-200">
-      <div className="flex h-16 items-center px-6 border-b border-slate-200">
-        <Activity className="h-8 w-8 text-blue-600" />
-        <span className="ml-2 text-xl font-bold text-slate-900 tracking-tight">Cliniq</span>
+      <div className="flex h-16 items-center justify-between px-6 border-b border-slate-200">
+        <div className="flex items-center">
+          <Activity className="h-8 w-8 text-blue-600" />
+          <span className="ml-2 text-xl font-bold text-slate-900 tracking-tight">Cliniq</span>
+        </div>
+        <button 
+          onClick={onClose}
+          className="lg:hidden p-2 text-slate-500 hover:text-slate-700"
+        >
+          <X className="h-5 w-5" />
+        </button>
       </div>
       <nav className="flex-1 space-y-1 px-3 py-4">
         {navigation.map((item) => {
@@ -42,6 +52,7 @@ export function Sidebar() {
             <Link
               key={item.name}
               href={item.href}
+              onClick={onClose}
               className={cn(
                 "group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors",
                 isActive

@@ -83,6 +83,14 @@ const settingsGroups = [
         icon: Globe,
         color: "text-purple-600",
         bg: "bg-purple-50"
+      },
+      {
+        name: "Patient Portal",
+        description: "Configure patient access and online features.",
+        href: "/portal",
+        icon: Globe,
+        color: "text-blue-600",
+        bg: "bg-blue-50"
       }
     ]
   }

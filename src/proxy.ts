@@ -1,7 +1,7 @@
 import { withAuth } from "next-auth/middleware";
 import { NextResponse } from "next/server";
 
-export default withAuth(
+export const proxy = withAuth(
   function middleware(req) {
     const token = req.nextauth.token;
     const path = req.nextUrl.pathname;
@@ -38,9 +38,10 @@ export default withAuth(
   }
 );
 
-// Protect all routes except login, public assets, and api/auth
+// Protect all routes except login, public assets, and api routes
 export const config = {
   matcher: [
-    "/((?!api/auth|login|public|icons|_next/static|_next/image|favicon.ico|manifest.json|sw.js).*)",
+    // Protect all routes except these specific ones
+    "/((?!api|login|auth|icons|public|_next/static|_next/image|favicon.ico|manifest.json|sw.js).*)",
   ],
 };

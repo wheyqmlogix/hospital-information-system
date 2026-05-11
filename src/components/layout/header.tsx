@@ -1,6 +1,6 @@
 "use client";
 
-import { Bell, Search, LogOut, User as UserIcon } from "lucide-react";
+import { Bell, Search, LogOut, User as UserIcon, Menu } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { NetworkStatus } from "./network-status";
@@ -15,37 +15,52 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-export function Header() {
+interface HeaderProps {
+  onMenuClick?: () => void;
+}
+
+export function Header({ onMenuClick }: HeaderProps) {
   const { data: session } = useSession();
 
   return (
-    <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-8 sticky top-0 z-10">
-      <div className="flex-1 max-w-md flex items-center space-x-4">
-        <div className="relative flex-1">
+    <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4 md:px-8 sticky top-0 z-10">
+      <div className="flex-1 max-w-md flex items-center space-x-2 md:space-x-4">
+        <button 
+          onClick={onMenuClick}
+          className="lg:hidden p-2 text-slate-500 hover:text-slate-700 hover:bg-slate-50 rounded-md transition-colors"
+        >
+          <Menu className="h-5 w-5" />
+        </button>
+        <div className="relative flex-1 hidden sm:block">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
           <Input 
-            placeholder="Search patients, doctors, records..." 
+            placeholder="Search patients, doctors..." 
             className="pl-10 bg-slate-50 border-none focus-visible:ring-1 focus-visible:ring-blue-500 h-9"
           />
         </div>
-        <NetworkStatus />
+        <div className="sm:hidden">
+          <Search className="h-5 w-5 text-slate-400" />
+        </div>
+        <div className="hidden md:block">
+          <NetworkStatus />
+        </div>
       </div>
-      <div className="flex items-center space-x-4">
+      <div className="flex items-center space-x-2 md:space-x-4">
         <button className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-full transition-colors relative">
           <Bell className="h-5 w-5" />
           <span className="absolute top-2 right-2 h-2 w-2 bg-red-500 rounded-full border-2 border-white"></span>
         </button>
         
-        <div className="flex items-center pl-4 border-l border-slate-200">
+        <div className="flex items-center pl-2 md:pl-4 border-l border-slate-200">
           <DropdownMenu>
-            <DropdownMenuTrigger className="flex items-center space-x-3 hover:bg-slate-50 p-1.5 rounded-lg transition-colors">
-              <div className="text-right hidden sm:block">
+            <DropdownMenuTrigger className="flex items-center space-x-2 md:space-x-3 hover:bg-slate-50 p-1 md:p-1.5 rounded-lg transition-colors">
+              <div className="text-right hidden md:block">
                 <p className="text-sm font-semibold text-slate-900">{session?.user?.name || "Loading..."}</p>
                 <p className="text-xs text-slate-500">{session?.user?.role || "Staff"}</p>
               </div>
-              <Avatar className="h-9 w-9 border border-slate-200">
+              <Avatar className="h-8 w-8 md:h-9 md:w-9 border border-slate-200">
                 <AvatarImage src={session?.user?.image || ""} />
-                <AvatarFallback className="bg-blue-100 text-blue-700 font-medium uppercase">
+                <AvatarFallback className="bg-blue-100 text-blue-700 text-xs md:text-sm font-medium uppercase">
                   {session?.user?.name ? session.user.name.split(" ").map(n => n[0]).join("") : "U"}
                 </AvatarFallback>
               </Avatar>

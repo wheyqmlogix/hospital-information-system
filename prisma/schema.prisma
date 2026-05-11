@@ -1,12 +1,392 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
+}
+
+model Patient {
+  id               String             @id @default(cuid())
+  patientId        String             @unique
+  philHealthId     String?            @unique
+  nationalId       String?            @unique
+  seniorCitizenId  String?            @unique
+  pwdId            String?            @unique
+  firstName        String
+  middleName       String?
+  lastName         String
+  dateOfBirth      DateTime
+  gender           Gender
+  status           PatientStatus      @default(OUTPATIENT)
+  civilStatus      String?
+  nationality      String             @default("Filipino")
+  religion         String?
+  occupation       String?
+  address          String?
+  barangay         String?
+  city             String?
+  province         String?
+  zipCode          String?
+  mobileNumber     String?
+  email            String?
+  bloodType        String?
+  allergies        String?
+  emergencyContact String?
+  emergencyNumber  String?
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+  admissions       Admission[]
+  appointments     Appointment[]
+  assignedBed      Bed?               @relation("PatientBed")
+  billingRecords   BillingRecord[]
+  clinicalNotes    ClinicalNote[]
+  labRequests      LabRequest[]
+  prescriptions    Prescription[]
+  radRequests      RadiologyRequest[]
+}
+
+model Admission {
+  id                   String               @id @default(cuid())
+  patientId            String
+  admittedAt           DateTime             @default(now())
+  dischargedAt         DateTime?
+  admittingDiagnosis   String
+  finalDiagnosis       String?
+  homeMedications      String?
+  followUpInstructions String?
+  roomNumber           String
+  ward                 String?
+  isPhilHealthMember   Boolean              @default(false)
+  philHealthPIN        String?
+  dpaConsentTimestamp  DateTime?
+  status               AdmissionStatus      @default(ADMITTED)
+  department           String               @default("ADMITTING") // ER or ADMITTING
+  createdAt            DateTime             @default(now())
+  updatedAt            DateTime             @updatedAt
+  admissionSource      String               @default("Walk-in")
+  admissionType        AdmissionType        @default(ROUTINE)
+  guarantorName        String?
+  guarantorPhone       String?
+  guarantorRelation    String?
+  patient              Patient              @relation(fields: [patientId], references: [id])
+  physicians           AdmissionPhysician[]
+  bed                  Bed?
+  billingRecords       BillingRecord[]
+}
+
+model AdmissionPhysician {
+  id          String    @id @default(cuid())
+  admissionId String
+  physicianId String
+  role        String    @default("ATTENDING")
+  isPrimary   Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  admission   Admission @relation(fields: [admissionId], references: [id])
+  physician   User      @relation(fields: [physicianId], references: [id])
+
+  @@unique([admissionId, physicianId])
+}
+
+model LabRequest {
+  id          String    @id @default(cuid())
+  patientId   String
+  testName    String
+  category    String
+  doctorName  String
+  status      String    @default("PENDING")
+  results     String?
+  completedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  patient     Patient   @relation(fields: [patientId], references: [id])
+}
+
+model RadiologyRequest {
+  id            String    @id @default(cuid())
+  patientId     String
+  procedureName String
+  type          String
+  doctorName    String
+  status        String    @default("PENDING")
+  findings      String?
+  impression    String?
+  completedAt   DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  patient       Patient   @relation(fields: [patientId], references: [id])
+}
+
+model InventoryItem {
+  id            String             @id @default(cuid())
+  name          String
+  genericName   String?
+  sku           String             @unique
+  category      String
+  unit          String
+  currentStock  Int                @default(0)
+  minStockLevel Int                @default(10)
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+  transactions  StockTransaction[]
+}
+
+model StockTransaction {
+  id          String        @id @default(cuid())
+  itemId      String
+  type        String
+  quantity    Int
+  batchNumber String?
+  expiryDate  DateTime?
+  referenceId String?
+  notes       String?
+  createdAt   DateTime      @default(now())
+  item        InventoryItem @relation(fields: [itemId], references: [id])
+}
+
+model Appointment {
+  id              String   @id @default(cuid())
+  patientId       String
+  doctorName      String
+  appointmentDate DateTime
+  reason          String?
+  status          String   @default("SCHEDULED")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  patient         Patient  @relation(fields: [patientId], references: [id])
+}
+
+model BillingRecord {
+  id              String          @id @default(cuid())
+  patientId       String
+  description     String?
+  totalAmount     Decimal         @default(0) @db.Decimal(10, 2)
+  philHealthShare Decimal         @default(0) @db.Decimal(10, 2)
+  hmoShare        Decimal         @default(0) @db.Decimal(10, 2)
+  discountTotal   Decimal         @default(0) @db.Decimal(10, 2)
+  patientShare    Decimal         @default(0) @db.Decimal(10, 2)
+  status          String          @default("UNPAID")
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  admissionId     String?
+  balanceAmount   Decimal         @default(0) @db.Decimal(10, 2)
+  caseRateAmount  Decimal         @default(0) @db.Decimal(10, 2)
+  grossAmount     Decimal         @default(0) @db.Decimal(10, 2)
+  paidAmount      Decimal         @default(0) @db.Decimal(10, 2)
+  vatExemptAmount Decimal         @default(0) @db.Decimal(10, 2)
+  items           BillingItem[]
+  admission       Admission?      @relation(fields: [admissionId], references: [id])
+  patient         Patient         @relation(fields: [patientId], references: [id])
+  payments        Payment[]
+  promissoryNote  PromissoryNote?
+}
+
+model Payment {
+  id              String        @id @default(cuid())
+  billingRecordId String
+  amount          Decimal       @db.Decimal(10, 2)
+  method          String
+  referenceNumber String?
+  collectedBy     String?
+  createdAt       DateTime      @default(now())
+  billingRecord   BillingRecord @relation(fields: [billingRecordId], references: [id])
+}
+
+model PromissoryNote {
+  id               String        @id @default(cuid())
+  billingRecordId  String        @unique
+  totalAmount      Decimal       @db.Decimal(10, 2)
+  initialPayment   Decimal       @default(0) @db.Decimal(10, 2)
+  remainingBalance Decimal       @db.Decimal(10, 2)
+  dueDate          DateTime
+  reason           String?
+  guarantorName    String?
+  guarantorContact String?
+  status           String        @default("ACTIVE")
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  billingRecord    BillingRecord @relation(fields: [billingRecordId], references: [id])
+}
+
+model BillingItem {
+  id              String        @id @default(cuid())
+  billingRecordId String
+  serviceName     String
+  category        String?
+  quantity        Int           @default(1)
+  unitPrice       Decimal       @db.Decimal(10, 2)
+  totalAmount     Decimal       @db.Decimal(10, 2)
+  createdAt       DateTime      @default(now())
+  isVatable       Boolean       @default(true)
+  billingRecord   BillingRecord @relation(fields: [billingRecordId], references: [id])
+}
+
+model Service {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  category  String
+  basePrice Decimal  @db.Decimal(10, 2)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  isVatable Boolean  @default(true)
+}
+
+model ClinicalNote {
+  id               String   @id @default(cuid())
+  patientId        String
+  doctorName       String
+  subjective       String?
+  objective        String?
+  assessment       String?
+  plan             String?
+  diagnosis        String?
+  icd10Code        String?
+  bloodPressure    String?
+  temperature      Decimal? @db.Decimal(4, 1)
+  heartRate        Int?
+  respiratoryRate  Int?
+  oxygenSaturation Int?
+  weight           Decimal? @db.Decimal(5, 2)
+  height           Decimal? @db.Decimal(5, 2)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  patient          Patient  @relation(fields: [patientId], references: [id])
+}
+
+model Prescription {
+  id         String             @id @default(cuid())
+  patientId  String
+  doctorName String
+  notes      String?
+  status     String             @default("ACTIVE")
+  createdAt  DateTime           @default(now())
+  updatedAt  DateTime           @updatedAt
+  patient    Patient            @relation(fields: [patientId], references: [id])
+  items      PrescriptionItem[]
+}
+
+model PrescriptionItem {
+  id             String       @id @default(cuid())
+  prescriptionId String
+  medicationName String
+  dosage         String
+  frequency      String
+  duration       String?
+  instructions   String?
+  createdAt      DateTime     @default(now())
+  prescription   Prescription @relation(fields: [prescriptionId], references: [id])
+}
+
+model Medication {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  genericName String
+  form        String
+  strength    String
+  category    String?
+  createdAt   DateTime @default(now())
+  basePrice   Decimal? @db.Decimal(10, 2)
+  isVatable   Boolean  @default(true)
+}
+
+model Room {
+  id         String   @id @default(cuid())
+  roomNumber String   @unique
+  type       String
+  floor      String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  beds       Bed[]
+}
+
+model Bed {
+  id          String     @id @default(cuid())
+  bedNumber   String
+  roomId      String
+  status      String     @default("AVAILABLE")
+  patientId   String?    @unique
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  admissionId String?    @unique
+  admission   Admission? @relation(fields: [admissionId], references: [id])
+  patient     Patient?   @relation("PatientBed", fields: [patientId], references: [id])
+  room        Room       @relation(fields: [roomId], references: [id])
+}
+
+model User {
+  id                  String               @id @default(cuid())
+  name                String
+  email               String               @unique
+  passwordHash        String
+  licenseNumber       String?              @unique
+  specialization      String?
+  status              String               @default("ACTIVE")
+  lastLogin           DateTime?
+  roleId              String
+  primaryDepartmentId String?
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  admissions          AdmissionPhysician[]
+  performedActions    AuditLog[]           @relation("PerformedActions")
+  auditLogs           AuditLog[]           @relation("UserAuditLogs")
+  primaryDepartment   Department?          @relation("PrimaryDepartment", fields: [primaryDepartmentId], references: [id])
+  role                Role                 @relation(fields: [roleId], references: [id])
+  departments         UserDepartment[]
+}
+
+model Role {
+  id          String       @id @default(cuid())
+  name        String       @unique
+  description String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  users       User[]
+  permissions Permission[] @relation("PermissionToRole")
+}
+
+model Permission {
+  id          String   @id @default(cuid())
+  code        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  roles       Role[]   @relation("PermissionToRole")
+}
+
+model Department {
+  id           String           @id @default(cuid())
+  name         String           @unique
+  description  String?
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+  primaryUsers User[]           @relation("PrimaryDepartment")
+  users        UserDepartment[]
+}
+
+model UserDepartment {
+  userId       String
+  departmentId String
+  isHead       Boolean    @default(false)
+  department   Department @relation(fields: [departmentId], references: [id])
+  user         User       @relation(fields: [userId], references: [id])
+
+  @@id([userId, departmentId])
+}
+
+model AuditLog {
+  id            String   @id @default(cuid())
+  action        String
+  table         String?
+  recordId      String?
+  changes       Json?
+  userId        String?
+  performedById String?
+  ipAddress     String?
+  userAgent     String?
+  createdAt     DateTime @default(now())
+  performedBy   User?    @relation("PerformedActions", fields: [performedById], references: [id])
+  user          User?    @relation("UserAuditLogs", fields: [userId], references: [id])
 }
 
 enum PatientStatus {
@@ -23,415 +403,19 @@ enum AdmissionStatus {
   DISCHARGED
   PENDING_BILLING
   CANCELLED
+  ER_RELEASED
+  TRANSFERRED
+}
+
+enum AdmissionType {
+  ROUTINE
+  EMERGENCY
+  URGENT
+  MATERNITY
 }
 
 enum Gender {
   MALE
   FEMALE
   OTHER
-}
-
-model Patient {
-  id              String        @id @default(cuid())
-  patientId       String        @unique // e.g., PT-001
-  philHealthId    String?       @unique
-  nationalId      String?       @unique
-  seniorCitizenId String?       @unique
-  pwdId           String?       @unique
-  firstName       String
-  middleName      String?
-  lastName        String
-  dateOfBirth     DateTime
-  gender          Gender
-  status          PatientStatus @default(OUTPATIENT)
-  civilStatus     String?       // SINGLE, MARRIED, WIDOWED, SEPARATED
-  nationality     String        @default("Filipino")
-  religion        String?
-  occupation      String?
-  
-  // Structured Address (Philippine Context)
-  address         String?       // Full address or street details
-  barangay        String?
-  city            String?
-  province        String?
-  zipCode         String?
-  
-  mobileNumber    String?
-  email           String?
-  bloodType       String?
-  allergies       String?
-  emergencyContact String?
-  emergencyNumber  String?
-  
-  appointments    Appointment[]
-  admissions      Admission[]
-  billingRecords  BillingRecord[]
-  clinicalNotes   ClinicalNote[]
-  prescriptions   Prescription[]
-  assignedBed     Bed?          @relation("PatientBed")
-  labRequests     LabRequest[]
-  radRequests     RadiologyRequest[]
-  
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-}
-
-model Admission {
-  id                String          @id @default(cuid())
-  patientId         String
-  patient           Patient         @relation(fields: [patientId], references: [id])
-  admittedAt        DateTime        @default(now())
-  dischargedAt      DateTime?
-  admittingDiagnosis String
-  finalDiagnosis    String?
-  homeMedications   String?
-  followUpInstructions String?
-  roomNumber        String
-  ward              String?
-  
-  // PhilHealth
-  isPhilHealthMember Boolean        @default(false)
-  philHealthPIN     String?
-  
-  // Compliance
-  dpaConsentTimestamp DateTime?
-  
-  status            AdmissionStatus @default(ADMITTED)
-  
-  // Relationships
-  billingRecords    BillingRecord[]
-  bed               Bed?
-  
-  createdAt         DateTime        @default(now())
-  updatedAt         DateTime        @updatedAt
-}
-
-model LabRequest {
-  id              String        @id @default(cuid())
-  patientId       String
-  patient         Patient       @relation(fields: [patientId], references: [id])
-  testName        String
-  category        String        // HEMATOLOGY, CHEMISTRY, etc.
-  doctorName      String
-  status          String        @default("PENDING") // PENDING, IN_PROGRESS, COMPLETED, CANCELLED
-  results         String?       @db.Text
-  completedAt     DateTime?
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-}
-
-model RadiologyRequest {
-  id              String        @id @default(cuid())
-  patientId       String
-  patient         Patient       @relation(fields: [patientId], references: [id])
-  procedureName   String
-  type            String        // XRAY, ULTRASOUND, CT, MRI
-  doctorName      String
-  status          String        @default("PENDING")
-  findings        String?       @db.Text
-  impression      String?       @db.Text
-  completedAt     DateTime?
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-}
-
-model InventoryItem {
-  id              String             @id @default(cuid())
-  name            String
-  genericName     String?
-  sku             String             @unique
-  category        String             // PHARMACY, MEDICAL_SUPPLY, OFFICE_SUPPLY
-  unit            String             // Tablet, Bottle, Piece, etc.
-  currentStock    Int                @default(0)
-  minStockLevel   Int                @default(10)
-  transactions    StockTransaction[]
-  
-  createdAt       DateTime           @default(now())
-  updatedAt       DateTime           @updatedAt
-}
-
-model StockTransaction {
-  id              String        @id @default(cuid())
-  itemId          String
-  item            InventoryItem @relation(fields: [itemId], references: [id])
-  type            String        // IN (Purchase/Return), OUT (Dispense/Wastage)
-  quantity        Int
-  batchNumber     String?
-  expiryDate      DateTime?
-  referenceId     String?       // e.g., PrescriptionId or PO ID
-  notes           String?
-  
-  createdAt       DateTime      @default(now())
-}
-
-model Appointment {
-  id              String        @id @default(cuid())
-  patientId       String
-  patient         Patient       @relation(fields: [patientId], references: [id])
-  doctorName      String
-  appointmentDate DateTime
-  reason          String?
-  status          String        @default("SCHEDULED") // SCHEDULED, COMPLETED, CANCELLED
-  
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-}
-
-model BillingRecord {
-  id              String        @id @default(cuid())
-  patientId       String
-  patient         Patient       @relation(fields: [patientId], references: [id])
-  admissionId     String?
-  admission       Admission?    @relation(fields: [admissionId], references: [id])
-  description     String?
-  items           BillingItem[]
-  payments        Payment[]
-  promissoryNote  PromissoryNote?
-  
-  // Financials
-  grossAmount     Decimal       @default(0) @db.Decimal(10, 2)
-  philHealthShare Decimal       @default(0) @db.Decimal(10, 2)
-  caseRateAmount  Decimal       @default(0) @db.Decimal(10, 2)
-  hmoShare        Decimal       @default(0) @db.Decimal(10, 2)
-  discountTotal   Decimal       @default(0) @db.Decimal(10, 2)
-  vatExemptAmount Decimal       @default(0) @db.Decimal(10, 2)
-  patientShare    Decimal       @default(0) @db.Decimal(10, 2)
-  totalAmount     Decimal       @default(0) @db.Decimal(10, 2) // Net Amount Due
-  paidAmount      Decimal       @default(0) @db.Decimal(10, 2)
-  balanceAmount   Decimal       @default(0) @db.Decimal(10, 2)
-  
-  status          String        @default("UNPAID") // UNPAID, PARTIAL, PAID, PROMISSORY
-  
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-}
-
-model Payment {
-  id              String        @id @default(cuid())
-  billingRecordId String
-  billingRecord   BillingRecord @relation(fields: [billingRecordId], references: [id])
-  amount          Decimal       @db.Decimal(10, 2)
-  method          String        // CASH, CARD, CHEQUE, ONLINE
-  referenceNumber String?       // e.g. Transaction ID, Check number
-  collectedBy     String?       // User name or ID
-  
-  createdAt       DateTime      @default(now())
-}
-
-model PromissoryNote {
-  id              String        @id @default(cuid())
-  billingRecordId String        @unique
-  billingRecord   BillingRecord @relation(fields: [billingRecordId], references: [id])
-  totalAmount     Decimal       @db.Decimal(10, 2)
-  initialPayment  Decimal       @default(0) @db.Decimal(10, 2)
-  remainingBalance Decimal      @db.Decimal(10, 2)
-  dueDate         DateTime
-  reason          String?       @db.Text
-  guarantorName   String?
-  guarantorContact String?
-  status          String        @default("ACTIVE") // ACTIVE, SETTLED, DEFAULTED
-  
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-}
-
-model BillingItem {
-  id              String        @id @default(cuid())
-  billingRecordId String
-  billingRecord   BillingRecord @relation(fields: [billingRecordId], references: [id])
-  serviceName     String
-  category        String?       // ACCOMMODATION, LABORATORY, PHARMACY, etc.
-  quantity        Int           @default(1)
-  unitPrice       Decimal       @db.Decimal(10, 2)
-  totalAmount     Decimal       @db.Decimal(10, 2)
-  isVatable       Boolean       @default(true)
-  
-  createdAt       DateTime      @default(now())
-}
-
-model Service {
-  id          String        @id @default(cuid())
-  name        String        @unique
-  category    String        // ACCOMMODATION, LABORATORY, PHARMACY, PROFESSIONAL_FEE
-  basePrice   Decimal       @db.Decimal(10, 2)
-  isVatable   Boolean       @default(true)
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
-}
-
-model ClinicalNote {
-  id              String        @id @default(cuid())
-  patientId       String
-  patient         Patient       @relation(fields: [patientId], references: [id])
-  doctorName      String
-
-  // SOAP Notes
-  subjective      String?       @db.Text
-  objective       String?       @db.Text
-  assessment      String?       @db.Text
-  plan            String?       @db.Text
-  diagnosis       String?
-  icd10Code       String?
-
-  // Vitals
-  bloodPressure   String?       // e.g., 120/80
-  temperature     Decimal?      @db.Decimal(4, 1) // e.g., 37.5
-  heartRate       Int?          // bpm
-  respiratoryRate Int?          // cpm
-  oxygenSaturation Int?         // %
-  weight          Decimal?      @db.Decimal(5, 2) // kg
-  height          Decimal?      @db.Decimal(5, 2) // cm
-
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-}
-
-model Prescription {
-  id              String             @id @default(cuid())
-  patientId       String
-  patient         Patient            @relation(fields: [patientId], references: [id])
-  doctorName      String
-  items           PrescriptionItem[]
-  notes           String?
-  status          String             @default("ACTIVE") // ACTIVE, COMPLETED, CANCELLED
-
-  createdAt       DateTime           @default(now())
-  updatedAt       DateTime           @updatedAt
-}
-
-model PrescriptionItem {
-  id              String       @id @default(cuid())
-  prescriptionId  String
-  prescription    Prescription @relation(fields: [prescriptionId], references: [id])
-  medicationName  String
-  dosage          String       // e.g., 500mg
-  frequency       String       // e.g., 3x a day
-  duration        String?      // e.g., 7 days
-  instructions    String?
-
-  createdAt       DateTime     @default(now())
-}
-
-model Medication {
-  id          String   @id @default(cuid())
-  name        String   @unique
-  genericName String
-  form        String   // Tablet, Syrup, Injection, etc.
-  strength    String   // 500mg, 5ml/100mg, etc.
-  category    String?
-  basePrice   Decimal? @db.Decimal(10, 2)
-  isVatable   Boolean  @default(true)
-  createdAt   DateTime @default(now())
-}
-
-model Room {
-  id          String   @id @default(cuid())
-  roomNumber  String   @unique
-  type        String   // PRIVATE, SEMI-PRIVATE, WARD, ICU, ER
-  floor       String?
-  beds        Bed[]
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-}
-
-model Bed {
-  id          String   @id @default(cuid())
-  bedNumber   String
-  roomId      String
-  room        Room     @relation(fields: [roomId], references: [id])
-  status      String   @default("AVAILABLE") // AVAILABLE, OCCUPIED, MAINTENANCE, CLEANING
-  
-  patientId   String?  @unique
-  patient     Patient? @relation("PatientBed", fields: [patientId], references: [id])
-  
-  admissionId String?  @unique
-  admission   Admission? @relation(fields: [admissionId], references: [id])
-
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-}
-
-model User {
-  id              String           @id @default(cuid())
-  name            String
-  email           String           @unique
-  passwordHash    String
-  licenseNumber   String?          @unique // Professional ID for doctors/nurses
-  specialization  String?          // Cardiology, Pediatrics, etc.
-  status          String           @default("ACTIVE") // ACTIVE, INACTIVE, SUSPENDED
-  lastLogin       DateTime?
-  
-  roleId          String
-  role            Role             @relation(fields: [roleId], references: [id])
-  
-  primaryDepartmentId String?
-  primaryDepartment   Department?  @relation("PrimaryDepartment", fields: [primaryDepartmentId], references: [id])
-  
-  departments     UserDepartment[]
-  auditLogs       AuditLog[]       @relation("UserAuditLogs")
-  performedActions AuditLog[]      @relation("PerformedActions")
-  
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
-}
-
-model Role {
-  id              String           @id @default(cuid())
-  name            String           @unique // SuperAdmin, Doctor, Nurse, Staff
-  description     String?
-  permissions     Permission[]
-  users           User[]
-  
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
-}
-
-model Permission {
-  id              String           @id @default(cuid())
-  code            String           @unique // can_prescribe, can_view_records, etc.
-  description     String?
-  roles           Role[]
-  
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
-}
-
-model Department {
-  id              String           @id @default(cuid())
-  name            String           @unique // ER, OPD, Laboratory, Pharmacy, etc.
-  description     String?
-  primaryUsers    User[]           @relation("PrimaryDepartment")
-  users           UserDepartment[]
-  
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
-}
-
-model UserDepartment {
-  userId          String
-  user            User             @relation(fields: [userId], references: [id])
-  departmentId    String
-  department      Department       @relation(fields: [departmentId], references: [id])
-  isHead          Boolean          @default(false)
-  
-  @@id([userId, departmentId])
-}
-
-model AuditLog {
-  id              String           @id @default(cuid())
-  action          String           // CREATE, UPDATE, DELETE, LOGIN, LOGOUT
-  table           String?          // User, Patient, ClinicalNote, etc.
-  recordId        String?
-  changes         Json?            // Store before/after state
-  
-  userId          String?          // The user who was affected (optional)
-  user            User?            @relation("UserAuditLogs", fields: [userId], references: [id])
-  
-  performedById   String?          // The user who performed the action
-  performedBy     User?            @relation("PerformedActions", fields: [performedById], references: [id])
-  
-  ipAddress       String?
-  userAgent       String?
-  
-  createdAt       DateTime         @default(now())
 }

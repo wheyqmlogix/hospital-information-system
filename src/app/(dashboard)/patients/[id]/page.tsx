@@ -35,7 +35,6 @@ import {
   Edit
 } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -56,13 +55,6 @@ import {
   TableRow 
 } from "@/components/ui/table";
 import { EligibilityChecker } from "@/components/insurance/eligibility-checker";
-import { ClaimForm } from "@/components/patients/claim-form";
-import { ChargeForm } from "@/components/patients/charge-form";
-import { PrescriptionForm } from "@/components/patients/prescription-form";
-import { LabRequestForm } from "@/components/patients/lab-request-form";
-import { RadRequestForm } from "@/components/patients/rad-request-form";
-import { AdmissionForm } from "@/components/admissions/admission-form";
-import { DischargeForm } from "@/components/admissions/discharge-form";
 import { BillingSummary } from "@/components/admissions/billing-summary";
 import { calculateDiscounts, PatientCategory } from "@/lib/billing/utils";
 import { aiAuditor } from "@/lib/intelligence/auditor";
@@ -82,13 +74,6 @@ const statusStyles = {
 export default function PatientDetailPage() {
   const params = useParams();
   const id = params.id as string;
-  const [isClaimFormOpen, setIsClaimFormOpen] = useState(false);
-  const [isChargeFormOpen, setIsChargeFormOpen] = useState(false);
-  const [isPrescriptionFormOpen, setIsPrescriptionFormOpen] = useState(false);
-  const [isLabFormOpen, setIsLabFormOpen] = useState(false);
-  const [isRadFormOpen, setIsRadFormOpen] = useState(false);
-  const [isAdmissionFormOpen, setIsAdmissionFormOpen] = useState(false);
-  const [isDischargeFormOpen, setIsDischargeFormOpen] = useState(false);
 
   const router = useRouter();
   
@@ -134,21 +119,21 @@ export default function PatientDetailPage() {
   const pendingBillingAdmission = patient.admissions?.find((a: any) => a.status === "PENDING_BILLING");
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4">
+    <div className="space-y-4 md:space-y-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex items-center space-x-3 md:space-x-4">
           <Link 
             href="/patients"
-            className={cn(buttonVariants({ variant: "ghost", size: "icon" }), "h-9 w-9")}
+            className={cn(buttonVariants({ variant: "ghost", size: "icon" }), "h-8 w-8 md:h-9 md:w-9")}
           >
-            <ArrowLeft className="h-5 w-5" />
+            <ArrowLeft className="h-4 w-4 md:h-5 md:w-5" />
           </Link>
           <div>
-            <h1 className="text-2xl font-bold text-slate-900">{patient.firstName} {patient.lastName}</h1>
-            <div className="flex items-center space-x-3 mt-1">
-              <span className="text-sm font-medium text-slate-500">{patient.patientId}</span>
+            <h1 className="text-xl md:text-2xl font-bold text-slate-900 truncate max-w-[200px] md:max-w-none">{patient.firstName} {patient.lastName}</h1>
+            <div className="flex items-center space-x-2 md:space-x-3 mt-0.5 md:mt-1">
+              <span className="text-xs md:text-sm font-medium text-slate-500">{patient.patientId}</span>
               <span className="text-slate-300">•</span>
-              <Badge variant="outline" className={statusStyles[patient.status as keyof typeof statusStyles]}>
+              <Badge variant="outline" className={cn("text-[10px] md:text-xs", statusStyles[patient.status as keyof typeof statusStyles])}>
                 {patient.status}
               </Badge>
             </div>
@@ -157,21 +142,27 @@ export default function PatientDetailPage() {
         <div className="flex space-x-2">
           <Link 
             href={`/patients/${id}/edit`}
-            className={cn(buttonVariants({ variant: "outline" }))}
+            className={cn(buttonVariants({ variant: "outline", size: "sm" }), "flex-1 md:flex-none")}
           >
             <Edit className="h-4 w-4 mr-2" />
-            Edit Patient
+            Edit
           </Link>
           {patient.status !== "INPATIENT" ? (
-            <Button className="bg-blue-600 hover:bg-blue-700" onClick={() => setIsAdmissionFormOpen(true)}>
+            <Link 
+              href={`/patients/${id}/admit`}
+              className={cn(buttonVariants({ size: "sm" }), "bg-blue-600 hover:bg-blue-700 flex-1 md:flex-none")}
+            >
               <Plus className="h-4 w-4 mr-2" />
-              Admit Patient
-            </Button>
+              Admit
+            </Link>
           ) : (
-            <Button variant="destructive" onClick={() => setIsDischargeFormOpen(true)}>
+            <Link 
+              href={`/patients/${id}/discharge`}
+              className={cn(buttonVariants({ variant: "destructive", size: "sm" }), "flex-1 md:flex-none")}
+            >
               <LogOut className="h-4 w-4 mr-2" />
-              Discharge Clearance
-            </Button>
+              Discharge
+            </Link>
           )}
         </div>
       </div>
@@ -274,36 +265,22 @@ export default function PatientDetailPage() {
           <EligibilityChecker philhealthId={patient.philHealthId} />
 
           <div className="space-y-3">
-            <Button 
-              className="w-full bg-blue-600 hover:bg-blue-700 shadow-sm"
-              onClick={() => setIsClaimFormOpen(true)}
-              disabled={!patient.philHealthId}
+            <Link 
+              href={`/patients/${id}/claims/new`}
+              className={cn(buttonVariants(), "w-full bg-blue-600 hover:bg-blue-700 shadow-sm", !patient.philHealthId && "pointer-events-none opacity-50")}
             >
               <ShieldCheck className="h-4 w-4 mr-2" />
               File Insurance Claim
-            </Button>
+            </Link>
 
-            <Button 
-              variant="outline"
-              className="w-full border-teal-200 text-teal-700 hover:bg-teal-50"
-              onClick={() => setIsChargeFormOpen(true)}
+            <Link 
+              href={`/patients/${id}/charges/new`}
+              className={cn(buttonVariants({ variant: "outline" }), "w-full border-teal-200 text-teal-700 hover:bg-teal-50")}
             >
               <Receipt className="h-4 w-4 mr-2" />
               Add Hospital Charge
-            </Button>
+            </Link>
           </div>
-
-          <ClaimForm 
-            open={isClaimFormOpen} 
-            onOpenChange={setIsClaimFormOpen} 
-            patient={patient} 
-          />
-
-          <ChargeForm 
-            open={isChargeFormOpen} 
-            onOpenChange={setIsChargeFormOpen} 
-            patient={patient} 
-          />
 
           <Card className="border-none shadow-sm bg-red-50 border-l-4 border-l-red-500">
             <CardHeader className="pb-2">
@@ -322,26 +299,28 @@ export default function PatientDetailPage() {
 
         <div className="lg:col-span-2">
           <Tabs defaultValue="overview" className="w-full">
-            <TabsList className="w-full justify-start bg-transparent border-b border-slate-200 rounded-none h-auto p-0 space-x-8">
-              <TabsTrigger value="overview" className="border-b-2 border-transparent data-[state=active]:border-blue-600 data-[state=active]:bg-transparent rounded-none px-0 py-3 text-sm font-medium text-slate-500 data-[state=active]:text-blue-600 transition-none shadow-none">
-                Overview
-              </TabsTrigger>
-              <TabsTrigger value="clinical" className="border-b-2 border-transparent data-[state=active]:border-blue-600 data-[state=active]:bg-transparent rounded-none px-0 py-3 text-sm font-medium text-slate-500 data-[state=active]:text-blue-600 transition-none shadow-none">
-                Clinical Notes
-              </TabsTrigger>
-              <TabsTrigger value="ancillary" className="border-b-2 border-transparent data-[state=active]:border-blue-600 data-[state=active]:bg-transparent rounded-none px-0 py-3 text-sm font-medium text-slate-500 data-[state=active]:text-blue-600 transition-none shadow-none">
-                Lab & Imaging
-              </TabsTrigger>
-              <TabsTrigger value="prescriptions" className="border-b-2 border-transparent data-[state=active]:border-blue-600 data-[state=active]:bg-transparent rounded-none px-0 py-3 text-sm font-medium text-slate-500 data-[state=active]:text-blue-600 transition-none shadow-none">
-                Prescriptions
-              </TabsTrigger>
-              <TabsTrigger value="appointments" className="border-b-2 border-transparent data-[state=active]:border-blue-600 data-[state=active]:bg-transparent rounded-none px-0 py-3 text-sm font-medium text-slate-500 data-[state=active]:text-blue-600 transition-none shadow-none">
-                Appointments
-              </TabsTrigger>
-              <TabsTrigger value="billing" className="border-b-2 border-transparent data-[state=active]:border-blue-600 data-[state=active]:bg-transparent rounded-none px-0 py-3 text-sm font-medium text-slate-500 data-[state=active]:text-blue-600 transition-none shadow-none">
-                Billing
-              </TabsTrigger>
-            </TabsList>
+            <div className="overflow-x-auto pb-1 scrollbar-hide">
+              <TabsList className="inline-flex w-max md:w-full justify-start bg-transparent border-b border-slate-200 rounded-none h-auto p-0 space-x-4 md:space-x-8">
+                <TabsTrigger value="overview" className="border-b-2 border-transparent data-[state=active]:border-blue-600 data-[state=active]:bg-transparent rounded-none px-0 py-3 text-xs md:text-sm font-medium text-slate-500 data-[state=active]:text-blue-600 transition-none shadow-none">
+                  Overview
+                </TabsTrigger>
+                <TabsTrigger value="clinical" className="border-b-2 border-transparent data-[state=active]:border-blue-600 data-[state=active]:bg-transparent rounded-none px-0 py-3 text-xs md:text-sm font-medium text-slate-500 data-[state=active]:text-blue-600 transition-none shadow-none">
+                  Clinical
+                </TabsTrigger>
+                <TabsTrigger value="ancillary" className="border-b-2 border-transparent data-[state=active]:border-blue-600 data-[state=active]:bg-transparent rounded-none px-0 py-3 text-xs md:text-sm font-medium text-slate-500 data-[state=active]:text-blue-600 transition-none shadow-none">
+                  Ancillary
+                </TabsTrigger>
+                <TabsTrigger value="prescriptions" className="border-b-2 border-transparent data-[state=active]:border-blue-600 data-[state=active]:bg-transparent rounded-none px-0 py-3 text-xs md:text-sm font-medium text-slate-500 data-[state=active]:text-blue-600 transition-none shadow-none">
+                  Rx
+                </TabsTrigger>
+                <TabsTrigger value="appointments" className="border-b-2 border-transparent data-[state=active]:border-blue-600 data-[state=active]:bg-transparent rounded-none px-0 py-3 text-xs md:text-sm font-medium text-slate-500 data-[state=active]:text-blue-600 transition-none shadow-none">
+                  Appointments
+                </TabsTrigger>
+                <TabsTrigger value="billing" className="border-b-2 border-transparent data-[state=active]:border-blue-600 data-[state=active]:bg-transparent rounded-none px-0 py-3 text-xs md:text-sm font-medium text-slate-500 data-[state=active]:text-blue-600 transition-none shadow-none">
+                  Billing
+                </TabsTrigger>
+              </TabsList>
+            </div>
             
             <TabsContent value="overview" className="pt-6 space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -391,7 +370,7 @@ export default function PatientDetailPage() {
                       <div className="text-center py-8 bg-slate-50 rounded-lg border-2 border-dashed border-slate-200">
                         <Clock className="h-8 w-8 text-slate-300 mx-auto mb-2" />
                         <p className="text-sm text-slate-400">No active medications</p>
-                        <Button variant="link" size="sm" className="text-blue-600 mt-2" onClick={() => setIsPrescriptionFormOpen(true)}>
+                        <Button variant="link" size="sm" className="text-blue-600 mt-2" onClick={() => router.push(`/patients/${id}/prescriptions/new`)}>
                           Issue e-Prescription
                         </Button>
                       </div>
@@ -532,12 +511,14 @@ export default function PatientDetailPage() {
                         Laboratory Requests
                       </CardTitle>
                     </div>
-                    <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={() => setIsLabFormOpen(true)}>
+                    <Link 
+                      href={`/patients/${id}/lab-requests/new`}
+                      className={cn(buttonVariants({ variant: "ghost", size: "icon" }), "h-8 w-8")}
+                    >
                       <Plus className="h-4 w-4" />
-                    </Button>
+                    </Link>
                   </CardHeader>
                   <CardContent>
-                    <LabRequestForm open={isLabFormOpen} onOpenChange={setIsLabFormOpen} patient={patient} />
                     {patient.labRequests?.length > 0 ? (
                       <div className="space-y-3">
                         {patient.labRequests.map((req: any) => (
@@ -568,12 +549,14 @@ export default function PatientDetailPage() {
                         Radiology Requests
                       </CardTitle>
                     </div>
-                    <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={() => setIsRadFormOpen(true)}>
+                    <Link 
+                      href={`/patients/${id}/rad-requests/new`}
+                      className={cn(buttonVariants({ variant: "ghost", size: "icon" }), "h-8 w-8")}
+                    >
                       <Plus className="h-4 w-4" />
-                    </Button>
+                    </Link>
                   </CardHeader>
                   <CardContent>
-                    <RadRequestForm open={isRadFormOpen} onOpenChange={setIsRadFormOpen} patient={patient} />
                     {patient.radRequests?.length > 0 ? (
                       <div className="space-y-3">
                         {patient.radRequests.map((req: any) => (
@@ -605,22 +588,15 @@ export default function PatientDetailPage() {
                     <CardTitle className="text-lg">e-Prescription History</CardTitle>
                     <CardDescription>All medications prescribed to this patient.</CardDescription>
                   </div>
-                  <Button 
-                    size="sm" 
-                    className="bg-purple-600 hover:bg-purple-700"
-                    onClick={() => setIsPrescriptionFormOpen(true)}
+                  <Link 
+                    href={`/patients/${id}/prescriptions/new`}
+                    className={cn(buttonVariants({ size: "sm" }), "bg-purple-600 hover:bg-purple-700")}
                   >
                     <Plus className="h-4 w-4 mr-2" />
                     New Prescription
-                  </Button>
+                  </Link>
                 </CardHeader>
                 <CardContent>
-                  <PrescriptionForm 
-                    open={isPrescriptionFormOpen} 
-                    onOpenChange={setIsPrescriptionFormOpen} 
-                    patient={patient} 
-                  />
-                  
                   {patient.prescriptions?.length > 0 ? (
                     <div className="space-y-6">
                       {patient.prescriptions.map((pres: any) => (
@@ -811,20 +787,6 @@ export default function PatientDetailPage() {
         </div>
       </div>
 
-      <AdmissionForm 
-        open={isAdmissionFormOpen} 
-        onOpenChange={setIsAdmissionFormOpen} 
-        patient={patient} 
-      />
-
-      {activeAdmission && (
-        <DischargeForm 
-          open={isDischargeFormOpen} 
-          onOpenChange={setIsDischargeFormOpen} 
-          admissionId={activeAdmission.id} 
-          patientName={`${patient.firstName} ${patient.lastName}`}
-        />
-      )}
     </div>
   );
 }

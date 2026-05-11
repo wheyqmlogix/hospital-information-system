@@ -1,10 +1,21 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 
-export async function GET() {
+export async function GET(req: Request) {
+  const { searchParams } = new URL(req.url);
+  const search = searchParams.get("search");
+
   try {
     const patients = await prisma.patient.findMany({
+      where: search ? {
+        OR: [
+          { firstName: { contains: search, mode: 'insensitive' } },
+          { lastName: { contains: search, mode: 'insensitive' } },
+          { patientId: { contains: search, mode: 'insensitive' } },
+        ],
+      } : undefined,
       orderBy: { createdAt: "desc" },
+      take: 20, // Limit for search results
     });
     return NextResponse.json(patients);
   } catch (error) {
@@ -33,12 +44,12 @@ export async function POST(request: Request) {
     });
     
     return NextResponse.json(patient);
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Failed to create patient:", error);
     
     // Handle Prisma unique constraint violations
-    if (error.code === 'P2002') {
-      const field = error.meta?.target?.[0] || "identifier";
+    if (typeof error === 'object' && error !== null && 'code' in error && error.code === 'P2002') {
+      const field = (error as { meta?: { target?: string[] } }).meta?.target?.[0] || "identifier";
       return NextResponse.json(
         { error: `A patient with this ${field} already exists.` },
         { status: 400 }

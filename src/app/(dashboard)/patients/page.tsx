@@ -113,11 +113,11 @@ export default function PatientsPage() {
               <Table>
                 <TableHeader className="bg-slate-50">
                   <TableRow>
-                    <TableHead className="w-[100px]">Patient ID</TableHead>
+                    <TableHead className="w-[100px]">ID</TableHead>
                     <TableHead>Patient Name</TableHead>
-                    <TableHead>Age/Gender</TableHead>
+                    <TableHead className="hidden sm:table-cell">Age/Gender</TableHead>
                     <TableHead>Status</TableHead>
-                    <TableHead>Last Visit</TableHead>
+                    <TableHead className="hidden md:table-cell">Last Visit</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -125,49 +125,49 @@ export default function PatientsPage() {
                   {filteredPatients.length > 0 ? (
                     filteredPatients.map((patient: any) => (
                       <TableRow key={patient.id} className="hover:bg-slate-50 transition-colors">
-                        <TableCell className="font-medium text-slate-900">{patient.patientId}</TableCell>
+                        <TableCell className="font-medium text-slate-900 text-xs md:text-sm">{patient.patientId}</TableCell>
                         <TableCell>
-                          <Link href={`/patients/${patient.id}`} className="flex items-center space-x-3 group">
-                            <Avatar className="h-8 w-8">
-                              <AvatarFallback className="bg-slate-100 text-slate-600 text-xs font-medium">
+                          <Link href={`/patients/${patient.id}`} className="flex items-center space-x-2 md:space-x-3 group">
+                            <Avatar className="h-7 w-7 md:h-8 md:w-8 shrink-0">
+                              <AvatarFallback className="bg-slate-100 text-slate-600 text-[10px] md:text-xs font-medium">
                                 {patient.firstName[0]}{patient.lastName[0]}
                               </AvatarFallback>
                             </Avatar>
-                            <span className="font-medium text-slate-900 group-hover:text-blue-600 group-hover:underline">
+                            <span className="font-medium text-slate-900 group-hover:text-blue-600 group-hover:underline text-xs md:text-sm truncate max-w-[100px] md:max-w-none">
                               {patient.firstName} {patient.lastName}
                             </span>
                           </Link>
                         </TableCell>
-                        <TableCell className="text-slate-600">
+                        <TableCell className="text-slate-600 hidden sm:table-cell text-xs md:text-sm">
                           {new Date().getFullYear() - new Date(patient.dateOfBirth).getFullYear()}y / {patient.gender}
                         </TableCell>
                         <TableCell>
-                          <Badge variant="outline" className={statusStyles[patient.status as keyof typeof statusStyles]}>
+                          <Badge variant="outline" className={cn("text-[10px] md:text-xs px-1.5 py-0 md:px-2 md:py-0.5", statusStyles[patient.status as keyof typeof statusStyles])}>
                             {patient.status}
                           </Badge>
                         </TableCell>
-                        <TableCell className="text-slate-600">
+                        <TableCell className="text-slate-600 hidden md:table-cell text-xs md:text-sm">
                           {new Date(patient.updatedAt).toLocaleDateString()}
                         </TableCell>
                         <TableCell className="text-right">
-                          <div className="flex justify-end space-x-2">
+                          <div className="flex justify-end space-x-1 md:space-x-2">
                             <Link 
                               href={`/patients/${patient.id}`}
                               className={cn(
                                 buttonVariants({ variant: "ghost", size: "icon" }),
-                                "h-8 w-8 text-slate-400 hover:text-blue-600"
+                                "h-7 w-7 md:h-8 md:w-8 text-slate-400 hover:text-blue-600"
                               )}
                             >
-                              <FileText className="h-4 w-4" />
+                              <FileText className="h-3.5 w-3.5 md:h-4 md:w-4" />
                             </Link>
                             <Link 
                               href={`/patients/${patient.id}/edit`}
                               className={cn(
                                 buttonVariants({ variant: "ghost", size: "icon" }),
-                                "h-8 w-8 text-slate-400 hover:text-slate-600"
+                                "h-7 w-7 md:h-8 md:w-8 text-slate-400 hover:text-slate-600"
                               )}
                             >
-                              <Edit2 className="h-4 w-4" />
+                              <Edit2 className="h-3.5 w-3.5 md:h-4 md:w-4" />
                             </Link>
                           </div>
                         </TableCell>
@@ -175,7 +175,7 @@ export default function PatientsPage() {
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={6} className="h-24 text-center text-slate-500">
+                      <TableCell colSpan={6} className="h-24 text-center text-slate-500 text-xs md:text-sm">
                         No patients found.
                       </TableCell>
                     </TableRow>

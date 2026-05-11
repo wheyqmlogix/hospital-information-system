@@ -125,6 +125,43 @@ async function main() {
     });
   }
 
+  // 5. Rooms & Beds
+  const rooms = [
+    { roomNumber: "ER-01", type: "ER", floor: "1st Floor", beds: 1 },
+    { roomNumber: "ER-02", type: "ER", floor: "1st Floor", beds: 1 },
+    { roomNumber: "ER-03", type: "ER", floor: "1st Floor", beds: 1 },
+    { roomNumber: "W-201", type: "WARD", floor: "2nd Floor", beds: 4 },
+    { roomNumber: "W-202", type: "WARD", floor: "2nd Floor", beds: 4 },
+    { roomNumber: "P-301", type: "PRIVATE", floor: "3rd Floor", beds: 1 },
+    { roomNumber: "P-302", type: "PRIVATE", floor: "3rd Floor", beds: 1 },
+  ];
+
+  for (const r of rooms) {
+    const room = await prisma.room.upsert({
+      where: { roomNumber: r.roomNumber },
+      update: {},
+      create: {
+        roomNumber: r.roomNumber,
+        type: r.type,
+        floor: r.floor,
+      },
+    });
+
+    for (let i = 0; i < r.beds; i++) {
+      const bedNumber = r.beds === 1 ? r.roomNumber : `${r.roomNumber}-${String.fromCharCode(65 + i)}`;
+      await prisma.bed.upsert({
+        where: { id: `${room.id}-${bedNumber}` }, // Using a stable ID for upsert
+        update: {},
+        create: {
+          id: `${room.id}-${bedNumber}`,
+          bedNumber,
+          roomId: room.id,
+          status: "AVAILABLE",
+        },
+      });
+    }
+  }
+
   console.log("Seeding completed successfully.");
 }
 
