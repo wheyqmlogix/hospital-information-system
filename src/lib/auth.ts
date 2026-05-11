@@ -51,7 +51,10 @@ export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
 };
 
 export function hasPermission(user: User, permission: Permission): boolean {
-  return ROLE_PERMISSIONS[user.role].includes(permission);
+  const permissions = ROLE_PERMISSIONS[user.role] || [];
+  const allowed = permissions.includes(permission);
+  console.log(`Auth Check: User ${user.name} (${user.role}) -> ${permission}: ${allowed}`);
+  return allowed;
 }
 
 // Mock function to get current user - to be replaced with real auth later
@@ -66,7 +69,6 @@ export function getCurrentUser(): User {
 // Server-side version - in a real app, this would check cookies/headers
 export async function getServerUser(): Promise<User | null> {
   // Mocking a successful auth check for now
-  // In a real app: const session = await getSession(headers().get('cookie'))
   return {
     id: "1",
     name: "Admin User",
@@ -79,9 +81,16 @@ export async function getServerUser(): Promise<User | null> {
  * Returns the user if authorized, otherwise throws an error or returns null.
  */
 export async function authorize(permission: Permission): Promise<User> {
+  console.log(`Authorize Helper called for: ${permission}`);
   const user = await getServerUser();
-  if (!user || !hasPermission(user, permission)) {
-    throw new Error("Unauthorized: Insufficient permissions");
+  if (!user) {
+    console.warn("Authorize: No user found");
+    throw new Error("Unauthorized: No user session found");
   }
+  if (!hasPermission(user, permission)) {
+    console.warn(`Authorize: User ${user.role} lacks permission ${permission}`);
+    throw new Error(`Unauthorized: Insufficient permissions for ${permission}`);
+  }
+  console.log("Authorize: Success");
   return user;
 }

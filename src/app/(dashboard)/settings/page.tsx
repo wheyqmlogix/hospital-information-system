@@ -37,16 +37,35 @@ export default function SettingsPage() {
 
   const fetchData = async () => {
     setLoading(true);
+    console.log("Fetching management data...");
     try {
       const [staffRes, deptRes] = await Promise.all([
-        fetch("/api/admin/staff"),
-        fetch("/api/admin/departments")
+        fetch("/api/admin/staff", { cache: 'no-store' }),
+        fetch("/api/admin/departments", { cache: 'no-store' })
       ]);
       
-      if (staffRes.ok) setStaff(await staffRes.json());
-      if (deptRes.ok) setDepartments(await deptRes.json());
-    } catch (error) {
-      toast.error("Failed to load management data");
+      if (!staffRes.ok) {
+        const err = await staffRes.json();
+        console.error("Staff Fetch Error:", err);
+        toast.error(`Staff Error: ${err.error || staffRes.statusText}`);
+      } else {
+        const staffData = await staffRes.json();
+        console.log(`Loaded ${staffData.length} staff members`);
+        setStaff(staffData);
+      }
+
+      if (!deptRes.ok) {
+        const err = await deptRes.json();
+        console.error("Dept Fetch Error:", err);
+        toast.error(`Dept Error: ${err.error || deptRes.statusText}`);
+      } else {
+        const deptData = await deptRes.json();
+        console.log(`Loaded ${deptData.length} departments`);
+        setDepartments(deptData);
+      }
+    } catch (error: any) {
+      console.error("Fetch Data Failed:", error);
+      toast.error("Failed to load management data: " + error.message);
     } finally {
       setLoading(false);
     }
@@ -207,7 +226,7 @@ export default function SettingsPage() {
                     </div>
                     <div className="flex items-center text-sm font-medium text-slate-600">
                       <Users className="h-4 w-4 mr-3 text-slate-400" />
-                      {dept._count.staff} Staff Members
+                      {dept._count?.staff ?? 0} Staff Members
                     </div>
                   </div>
                 </CardContent>

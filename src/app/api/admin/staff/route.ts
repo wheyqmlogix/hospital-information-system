@@ -4,6 +4,8 @@ import { z } from "zod";
 import { authorize } from "@/lib/auth";
 import bcrypt from "bcryptjs";
 
+export const dynamic = "force-dynamic";
+
 const StaffSchema = z.object({
   firstName: z.string().min(1),
   lastName: z.string().min(1),
@@ -16,30 +18,17 @@ const StaffSchema = z.object({
 
 export async function GET() {
   try {
+    console.log("GET /api/admin/staff - Checking authorization");
     await authorize("system_admin");
+    console.log("GET /api/admin/staff - Authorized, fetching staff directory");
     const staff = await prisma.staff.findMany({
-      include: {
-        user: {
-          select: {
-            email: true,
-            role: true
-          }
-        },
-        department: {
-          select: {
-            name: true,
-            code: true
-          }
-        }
-      },
       orderBy: { lastName: "asc" }
     });
+    console.log(`GET /api/admin/staff - Found ${staff.length} staff members`);
     return NextResponse.json(staff);
   } catch (error: any) {
-    if (error.message?.includes("Unauthorized")) {
-      return NextResponse.json({ error: error.message }, { status: 403 });
-    }
-    return NextResponse.json({ error: "Failed to fetch staff" }, { status: 500 });
+    console.error("GET /api/admin/staff - Error:", error);
+    return NextResponse.json({ error: error.message || "Failed to fetch staff" }, { status: 500 });
   }
 }
 

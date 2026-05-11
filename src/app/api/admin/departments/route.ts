@@ -3,6 +3,8 @@ import prisma from "@/lib/prisma";
 import { z } from "zod";
 import { authorize } from "@/lib/auth";
 
+export const dynamic = "force-dynamic";
+
 const DepartmentSchema = z.object({
   code: z.string().min(2).max(10).toUpperCase(),
   name: z.string().min(2),
@@ -12,21 +14,17 @@ const DepartmentSchema = z.object({
 
 export async function GET() {
   try {
+    console.log("GET /api/admin/departments - Checking authorization");
     await authorize("system_admin");
+    console.log("GET /api/admin/departments - Authorized, fetching departments with staff count");
     const departments = await prisma.department.findMany({
-      include: {
-        _count: {
-          select: { staff: true }
-        }
-      },
       orderBy: { name: "asc" }
     });
+    console.log(`GET /api/admin/departments - Found ${departments.length} departments`);
     return NextResponse.json(departments);
   } catch (error: any) {
-    if (error.message?.includes("Unauthorized")) {
-      return NextResponse.json({ error: error.message }, { status: 403 });
-    }
-    return NextResponse.json({ error: "Failed to fetch departments" }, { status: 500 });
+    console.error("GET /api/admin/departments - Error:", error);
+    return NextResponse.json({ error: error.message || "Failed to fetch departments" }, { status: 500 });
   }
 }
 
