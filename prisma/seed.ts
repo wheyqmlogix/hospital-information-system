@@ -2,6 +2,7 @@ import { PrismaClient, StaffRole } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { Pool } from "pg";
 import "dotenv/config";
+import bcrypt from "bcryptjs";
 
 const connectionString = process.env.DATABASE_URL;
 const pool = new Pool({ connectionString });
@@ -10,6 +11,8 @@ const prisma = new PrismaClient({ adapter });
 
 async function main() {
   console.log("Start seeding...");
+
+  const defaultPassword = await bcrypt.hash("password123", 10);
 
   // 1. Create Departments
   const departments = [
@@ -103,7 +106,7 @@ async function main() {
           user: {
             create: {
               email: s.email,
-              password: "password123", // Default password
+              password: defaultPassword,
               name: `${s.firstName} ${s.lastName}`,
               role: s.role,
             }

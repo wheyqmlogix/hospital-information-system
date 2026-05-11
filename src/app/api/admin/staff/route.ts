@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { z } from "zod";
 import { authorize } from "@/lib/auth";
+import bcrypt from "bcryptjs";
 
 const StaffSchema = z.object({
   firstName: z.string().min(1),
@@ -10,7 +11,7 @@ const StaffSchema = z.object({
   specialization: z.string().optional(),
   departmentId: z.string().optional(),
   email: z.string().email(),
-  password: z.string().min(6), // In production, use hashing
+  password: z.string().min(6),
 });
 
 export async function GET() {
@@ -48,6 +49,9 @@ export async function POST(req: Request) {
     const body = await req.json();
     const validated = StaffSchema.parse(body);
 
+    // Hash password
+    const hashedPassword = await bcrypt.hash(validated.password, 10);
+
     // 1. Generate Staff ID (STF-YYYY-XXXXX)
     const year = new Date().getFullYear();
     const count = await prisma.staff.count();
@@ -69,7 +73,7 @@ export async function POST(req: Request) {
       await tx.user.create({
         data: {
           email: validated.email,
-          password: validated.password, // IMPORTANT: Hash this in real implementation
+          password: hashedPassword,
           name: `${validated.firstName} ${validated.lastName}`,
           role: validated.role,
           staffId: newStaff.id

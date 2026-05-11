@@ -22,12 +22,14 @@ import {
   SelectValue 
 } from "@/components/ui/select";
 import { toast } from "sonner";
+import { StaffModal } from "@/components/staff/staff-modal";
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState<"staff" | "departments">("staff");
   const [staff, setStaff] = useState<any[]>([]);
   const [departments, setDepartments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isStaffModalOpen, setIsStaffModalOpen] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -50,6 +52,14 @@ export default function SettingsPage() {
     }
   };
 
+  const handleAddClick = () => {
+    if (activeTab === "staff") {
+      setIsStaffModalOpen(true);
+    } else {
+      toast.info("Department creation form coming soon");
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -59,7 +69,7 @@ export default function SettingsPage() {
         </div>
         <div className="flex items-center space-x-2">
           <Button variant="outline" onClick={fetchData}>Refresh</Button>
-          <Button variant="medical">
+          <Button variant="medical" onClick={handleAddClick}>
             <Plus className="h-4 w-4 mr-2" />
             {activeTab === "staff" ? "Add Staff Member" : "Create Department"}
           </Button>
@@ -206,6 +216,13 @@ export default function SettingsPage() {
           </div>
         )}
       </div>
+
+      <StaffModal 
+        isOpen={isStaffModalOpen} 
+        onClose={() => setIsStaffModalOpen(false)} 
+        onSuccess={fetchData}
+        departments={departments}
+      />
     </div>
   );
 }
