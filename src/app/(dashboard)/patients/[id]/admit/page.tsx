@@ -4,9 +4,10 @@ import { ERAdmissionForm } from "@/components/admissions/er-admission-form";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 
-export default async function AdmitPatientPage({ params }: { params: { id: string } }) {
+export default async function AdmitPatientPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const patient = await prisma.patient.findUnique({
-    where: { id: params.id }
+    where: { id }
   });
 
   if (!patient) {

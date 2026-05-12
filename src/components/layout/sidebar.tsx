@@ -9,7 +9,9 @@ import {
   Activity,
   Pill,
   CreditCard,
-  TestTube
+  TestTube,
+  Map,
+  BarChart3
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/components/auth/auth-provider";
@@ -26,9 +28,11 @@ const navigation: NavigationItem[] = [
   { name: "Dashboard", href: "/", icon: LayoutDashboard },
   { name: "Patients (MPI)", href: "/patients", icon: Users, requiredPermission: "view_patients" },
   { name: "ER/Admissions", href: "/admissions", icon: Activity, requiredPermission: "view_admissions" },
+  { name: "Bed Management", href: "/beds", icon: Map, requiredPermission: "view_admissions" },
   { name: "Pharmacy", href: "/inventory", icon: Pill, requiredPermission: "manage_inventory" },
   { name: "Laboratory", href: "/lab", icon: TestTube, requiredPermission: "view_lab_orders" },
   { name: "Billing", href: "/billing", icon: CreditCard, requiredPermission: "view_billing" },
+  { name: "Reports", href: "/reports", icon: BarChart3, requiredPermission: "system_admin" },
   { name: "Settings", href: "/settings", icon: Settings, requiredPermission: "system_admin" },
 ];
 

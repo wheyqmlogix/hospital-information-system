@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { z } from "zod";
-import { authorize } from "@/lib/auth";
+import { authorize } from "@/lib/auth-server";
 
 const AdmissionSchema = z.object({
   patientId: z.string(),
@@ -66,7 +66,7 @@ export async function POST(req: Request) {
     }
 
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: error.errors }, { status: 400 });
+      return NextResponse.json({ error: error.issues }, { status: 400 });
     }
     return NextResponse.json({ error: "Failed to create admission" }, { status: 500 });
   }

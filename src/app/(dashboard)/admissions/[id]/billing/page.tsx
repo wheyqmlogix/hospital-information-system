@@ -1,11 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, use } from "react";
 import { 
   ArrowLeft, 
   Receipt, 
   Plus, 
-  Trash2, 
   CreditCard, 
   Printer, 
   Tag,
@@ -27,6 +26,10 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PDFDownloadLink } from "@react-pdf/renderer";
+import { BillingStatement } from "@/components/admissions/billing-statement";
+import { PaymentModal } from "@/components/admissions/payment-modal";
+import { PhilHealthClaims } from "@/components/admissions/philhealth-claims";
 import { cn } from "@/lib/utils";
 
 interface InvoiceItem {
@@ -47,10 +50,17 @@ interface Invoice {
   grossAmount: number;
   vatAmount: number;
   discountAmount: number;
+  philHealthAmount: number;
   netAmount: number;
+  paidAmount: number;
+  balance: number;
   items: InvoiceItem[];
   admission: {
+    id: string;
+    admissionId: string;
+    primaryCaseRateId?: string;
     patient: {
+      id: string;
       firstName: string;
       lastName: string;
       seniorId?: string;
@@ -68,12 +78,15 @@ interface CaseRate {
   totalAmount: number;
 }
 
-export default function BillingPage({ params }: { params: { id: string } }) {
+export default function BillingPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
   const [invoice, setInvoice] = useState<Invoice | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAddingItem, setIsAddingItem] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [caseRates, setCaseRates] = useState<CaseRate[]>([]);
   const [selectedCaseRate, setSelectedCaseRate] = useState<string | null>(null);
+  const [isClient, setIsClient] = useState(false);
   
   // New Item Form
   const [newItem, setNewItem] = useState({
@@ -84,9 +97,9 @@ export default function BillingPage({ params }: { params: { id: string } }) {
     isVatable: true
   });
 
-  const fetchInvoice = async () => {
+  const fetchInvoice = useCallback(async () => {
     try {
-      const res = await fetch(`/api/admissions/${params.id}/invoice`);
+      const res = await fetch(`/api/admissions/${id}/invoice`);
       if (res.ok) {
         const data = await res.json();
         setInvoice(data);
@@ -99,25 +112,28 @@ export default function BillingPage({ params }: { params: { id: string } }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
 
-  const fetchCaseRates = async (q: string = "") => {
+  const fetchCaseRates = useCallback(async (q: string = "") => {
     try {
       const res = await fetch(`/api/reference/case-rates?query=${q}`);
       if (res.ok) setCaseRates(await res.json());
     } catch (err) {
       console.error(err);
     }
-  };
+  }, []);
 
   useEffect(() => {
-    fetchInvoice();
-    fetchCaseRates();
-  }, [params.id]);
+    Promise.resolve().then(() => {
+      setIsClient(true);
+      fetchInvoice();
+      fetchCaseRates();
+    });
+  }, [fetchInvoice, fetchCaseRates]);
 
   const handleUpdateCaseRate = async (rateId: string) => {
     try {
-      const res = await fetch(`/api/admissions/${params.id}`, {
+      const res = await fetch(`/api/admissions/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ primaryCaseRateId: rateId }),
@@ -133,7 +149,7 @@ export default function BillingPage({ params }: { params: { id: string } }) {
 
   const handleAddItem = async () => {
     try {
-      const res = await fetch(`/api/admissions/${params.id}/invoice/items`, {
+      const res = await fetch(`/api/admissions/${id}/invoice/items`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(newItem),
@@ -156,7 +172,7 @@ export default function BillingPage({ params }: { params: { id: string } }) {
 
   const handleUpdateDiscount = async (discountType: string) => {
     try {
-      const res = await fetch(`/api/admissions/${params.id}/invoice`, {
+      const res = await fetch(`/api/admissions/${id}/invoice`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ discountType }),
@@ -176,11 +192,11 @@ export default function BillingPage({ params }: { params: { id: string } }) {
   });
 
   return (
-    <div className="max-w-5xl mx-auto space-y-8 pb-20">
+    <div className="max-w-[1400px] mx-auto space-y-8 pb-20">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="space-y-1">
           <Link 
-            href={`/admissions/${params.id}`} 
+            href={`/admissions/${id}`} 
             className="inline-flex items-center text-sm font-bold text-slate-400 hover:text-blue-600 transition-colors mb-2"
           >
             <ArrowLeft className="h-4 w-4 mr-1" />
@@ -188,24 +204,55 @@ export default function BillingPage({ params }: { params: { id: string } }) {
           </Link>
           <div className="flex items-center gap-4">
              <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Billing & Invoicing</h1>
-             <span className="bg-slate-100 text-slate-600 text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-wider">
-               {invoice.status}
+             <span className={cn(
+               "text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-wider",
+               invoice.status === 'PAID' ? "bg-green-100 text-green-700" :
+               invoice.status === 'PARTIALLY_PAID' ? "bg-blue-100 text-blue-700" :
+               "bg-slate-100 text-slate-600"
+             )}>
+               {invoice.status.replace("_", " ")}
              </span>
           </div>
           <p className="text-slate-500 font-mono text-xs uppercase tracking-widest">{invoice.invoiceNumber}</p>
         </div>
 
         <div className="flex items-center gap-3">
-           <Button variant="outline" className="rounded-2xl border-slate-200 font-bold px-6">
-              <Printer className="h-5 w-5 mr-2" />
-              Print SOA
-           </Button>
-           <Button className="bg-green-600 hover:bg-green-700 text-white rounded-2xl shadow-lg shadow-green-100 font-bold px-8">
+           {isClient && invoice && (
+             <PDFDownloadLink 
+               document={<BillingStatement invoice={invoice} />} 
+               fileName={`SOA-${invoice.invoiceNumber}.pdf`}
+             >
+                {({ loading }) => (
+                  <Button variant="outline" className="rounded-2xl border-slate-200 font-bold px-6" disabled={loading}>
+                     <Printer className="h-5 w-5 mr-2" />
+                     {loading ? 'Preparing...' : 'Print SOA'}
+                  </Button>
+                )}
+             </PDFDownloadLink>
+           )}
+           <Button 
+             onClick={() => setShowPaymentModal(true)}
+             disabled={invoice.balance <= 0}
+             className="bg-green-600 hover:bg-green-700 text-white rounded-2xl shadow-lg shadow-green-100 font-bold px-8"
+           >
               <CreditCard className="h-5 w-5 mr-2" />
-              Finalize & Pay
+              {invoice.status === 'PAID' ? 'Paid in Full' : 'Collect Payment'}
            </Button>
         </div>
       </div>
+
+      {showPaymentModal && (
+        <PaymentModal 
+          invoiceId={invoice.id}
+          invoiceNumber={invoice.invoiceNumber}
+          balance={invoice.balance}
+          onSuccess={() => {
+            setShowPaymentModal(false);
+            fetchInvoice();
+          }}
+          onCancel={() => setShowPaymentModal(false)}
+        />
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
          {/* Left Column: Items */}
@@ -323,13 +370,19 @@ export default function BillingPage({ params }: { params: { id: string } }) {
             </Card>
          </div>
 
-         {/* Right Column: Totals & Discounts */}
+         {/* Right Column: Totals & PhilHealth */}
          <div className="space-y-6">
             <Card className="border-none shadow-sm rounded-[2rem] overflow-hidden bg-slate-900 text-white">
                <CardContent className="p-8 space-y-6">
-                  <div className="space-y-1">
-                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Amount Due</p>
-                     <p className="text-4xl font-black">{currencyFormatter.format(Number(invoice.netAmount))}</p>
+                  <div className="flex justify-between items-start">
+                     <div className="space-y-1">
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Amount Due</p>
+                        <p className="text-4xl font-black">{currencyFormatter.format(Number(invoice.balance))}</p>
+                     </div>
+                     <div className="bg-white/10 px-3 py-1 rounded-lg">
+                        <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Total Bill</p>
+                        <p className="text-sm font-bold text-blue-400">{currencyFormatter.format(Number(invoice.netAmount))}</p>
+                     </div>
                   </div>
                   
                   <div className="pt-6 border-t border-white/10 space-y-4">
@@ -349,9 +402,21 @@ export default function BillingPage({ params }: { params: { id: string } }) {
                         <span className="font-bold">PhilHealth Benefit</span>
                         <span className="font-black">-{currencyFormatter.format(Number(invoice.philHealthAmount))}</span>
                      </div>
+                     {Number(invoice.paidAmount) > 0 && (
+                       <div className="flex justify-between items-center text-sm text-green-400 pt-2 border-t border-white/5">
+                          <span className="font-bold">Payments Received</span>
+                          <span className="font-black">-{currencyFormatter.format(Number(invoice.paidAmount))}</span>
+                       </div>
+                     )}
                   </div>
                </CardContent>
             </Card>
+
+            <PhilHealthClaims 
+              invoiceId={invoice.id}
+              patientId={invoice.admission.patient.id}
+              philHealthAmount={invoice.philHealthAmount}
+            />
 
             <Card className="border-none shadow-sm rounded-[2rem] overflow-hidden">
                <CardHeader className="bg-slate-50 border-b border-slate-100 px-8 py-6">
@@ -379,18 +444,6 @@ export default function BillingPage({ params }: { params: { id: string } }) {
                         </SelectContent>
                      </Select>
                   </div>
-
-                  {selectedCaseRate && (
-                    <div className="p-4 bg-blue-50 border border-blue-100 rounded-2xl flex gap-3">
-                       <Info className="h-5 w-5 text-blue-600 shrink-0" />
-                       <div>
-                          <p className="text-xs font-bold text-blue-800 uppercase tracking-wide">PhilHealth Deducted</p>
-                          <p className="text-[10px] text-blue-600 leading-relaxed mt-1">
-                             The benefit amount is automatically deducted from the patient&apos;s net bill according to the All-Case-Rate policy.
-                          </p>
-                       </div>
-                    </div>
-                  )}
                </CardContent>
             </Card>
 
@@ -415,18 +468,6 @@ export default function BillingPage({ params }: { params: { id: string } }) {
                         </SelectContent>
                      </Select>
                   </div>
-
-                  {invoice.discountType !== 'NONE' && (
-                    <div className="p-4 bg-green-50 border border-green-100 rounded-2xl flex gap-3">
-                       <Info className="h-5 w-5 text-green-600 shrink-0" />
-                       <div>
-                          <p className="text-xs font-bold text-green-800 uppercase tracking-wide">PH Standard Applied</p>
-                          <p className="text-[10px] text-green-600 leading-relaxed mt-1">
-                             Bill is calculated as VAT-Exempt (12%) followed by a 20% discount on the net-of-VAT amount.
-                          </p>
-                       </div>
-                    </div>
-                  )}
                </CardContent>
             </Card>
 

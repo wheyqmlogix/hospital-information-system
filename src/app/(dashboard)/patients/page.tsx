@@ -84,14 +84,14 @@ export default function PatientsPage() {
       {/* The Gatekeeper Search */}
       <div className="relative group">
         <div className="absolute inset-0 bg-blue-600/5 rounded-3xl blur-xl group-focus-within:bg-blue-600/10 transition-all"></div>
-        <div className="relative bg-white border-2 border-slate-100 rounded-3xl shadow-sm p-2 flex items-center group-focus-within:border-blue-500 transition-all">
+        <div className="relative bg-white dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-800 rounded-3xl shadow-sm p-2 flex items-center group-focus-within:border-blue-500 transition-all">
           <div className="pl-6 flex items-center text-slate-400 group-focus-within:text-blue-500 transition-colors">
             <Search className="h-6 w-6" />
           </div>
           <input
             autoFocus
             placeholder="Search by Name, Patient ID, PhilHealth PIN, or National ID..."
-            className="flex-1 px-6 py-5 text-xl font-medium border-none focus:ring-0 placeholder:text-slate-300"
+            className="flex-1 px-6 py-5 text-xl font-medium border-none focus:ring-0 placeholder:text-slate-400 dark:placeholder:text-slate-500 bg-transparent text-slate-900 dark:text-white outline-none"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />

@@ -8,34 +8,51 @@ import {
   Search, 
   MoreVertical, 
   ShieldCheck,
-  MapPin,
-  Briefcase
+  MapPin
 } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from "@/components/ui/select";
 import { toast } from "sonner";
 import { StaffModal } from "@/components/staff/staff-modal";
+import { DepartmentModal } from "@/components/staff/department-modal";
+
+interface StaffMember {
+  id: string;
+  firstName: string;
+  lastName: string;
+  staffId: string;
+  role: string;
+  specialization?: string;
+  department?: {
+    name: string;
+  };
+  user?: {
+    email: string;
+  };
+}
+
+interface Department {
+  id: string;
+  name: string;
+  code: string;
+  description?: string;
+  location?: string;
+  _count?: {
+    staff: number;
+  };
+}
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState<"staff" | "departments">("staff");
-  const [staff, setStaff] = useState<any[]>([]);
-  const [departments, setDepartments] = useState<any[]>([]);
+  const [staff, setStaff] = useState<StaffMember[]>([]);
+  const [departments, setDepartments] = useState<Department[]>([]);
   const [loading, setLoading] = useState(true);
   const [isStaffModalOpen, setIsStaffModalOpen] = useState(false);
-
-  useEffect(() => {
-    fetchData();
-  }, [activeTab]);
+  const [isDepartmentModalOpen, setIsDepartmentModalOpen] = useState(false);
 
   const fetchData = async () => {
+    await Promise.resolve();
     setLoading(true);
     console.log("Fetching management data...");
     try {
@@ -63,19 +80,23 @@ export default function SettingsPage() {
         console.log(`Loaded ${deptData.length} departments`);
         setDepartments(deptData);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Fetch Data Failed:", error);
-      toast.error("Failed to load management data: " + error.message);
+      toast.error("Failed to load management data: " + (error instanceof Error ? error.message : "Unknown error"));
     } finally {
       setLoading(false);
     }
   };
 
+  useEffect(() => {
+    Promise.resolve().then(() => fetchData());
+  }, [activeTab]);
+
   const handleAddClick = () => {
     if (activeTab === "staff") {
       setIsStaffModalOpen(true);
     } else {
-      toast.info("Department creation form coming soon");
+      setIsDepartmentModalOpen(true);
     }
   };
 
@@ -241,6 +262,12 @@ export default function SettingsPage() {
         onClose={() => setIsStaffModalOpen(false)} 
         onSuccess={fetchData}
         departments={departments}
+      />
+
+      <DepartmentModal
+        isOpen={isDepartmentModalOpen}
+        onClose={() => setIsDepartmentModalOpen(false)}
+        onSuccess={fetchData}
       />
     </div>
   );

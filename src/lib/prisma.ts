@@ -20,24 +20,7 @@ declare global {
   var prisma: undefined | ReturnType<typeof prismaClientSingleton>;
 }
 
-// Check if existing global prisma has the new models and relations
-let prisma = globalThis.prisma;
-if (prisma) {
-  const isStale = 
-    !("staff" in prisma) || 
-    !("department" in prisma) || 
-    // Check if the Staff model has the 'user' relation available
-    (prisma as any).staff?.fields?.user === undefined && (prisma as any)._base?.models?.Staff?.fields?.user === undefined;
-
-  if (isStale) {
-    console.log("Global Prisma instance is stale or missing relations. Re-initializing...");
-    prisma = undefined;
-  }
-}
-
-if (!prisma) {
-  prisma = prismaClientSingleton();
-}
+const prisma = globalThis.prisma ?? prismaClientSingleton();
 
 export default prisma;
 

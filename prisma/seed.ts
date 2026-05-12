@@ -119,6 +119,58 @@ async function main() {
     }
   }
 
+  // 3. Create Medications and Batches
+  console.log("Seeding medications and batches...");
+  const medications = [
+    { code: "PAR-500", name: "Biogesic", genericName: "Paracetamol", form: "TABLET", strength: "500mg", unit: "pc", price: 5, stock: 150, reorderLevel: 50 },
+    { code: "AMO-500", name: "Amoxicillin", genericName: "Amoxicillin", form: "CAPSULE", strength: "500mg", unit: "pc", price: 12, stock: 100, reorderLevel: 30 },
+  ];
+
+  for (const m of medications) {
+    const med = await prisma.medication.upsert({
+      where: { code: m.code },
+      update: { stock: m.stock },
+      create: m,
+    });
+
+    // Create a few batches for each medication to test FEFO
+    const batch1Exp = new Date();
+    batch1Exp.setMonth(batch1Exp.getMonth() + 3); // Expires in 3 months
+
+    const batch2Exp = new Date();
+    batch2Exp.setMonth(batch2Exp.getMonth() + 12); // Expires in 12 months
+
+    await prisma.stockBatch.upsert({
+      where: { id: `BATCH-${m.code}-001` },
+      update: {},
+      create: {
+        id: `BATCH-${m.code}-001`,
+        medicationId: med.id,
+        batchNumber: `BN-${m.code}-001`,
+        expiryDate: batch1Exp,
+        initialQuantity: Math.floor(m.stock / 2),
+        remainingQuantity: Math.floor(m.stock / 2),
+        status: "ACTIVE"
+      }
+    });
+
+    await prisma.stockBatch.upsert({
+      where: { id: `BATCH-${m.code}-002` },
+      update: {},
+      create: {
+        id: `BATCH-${m.code}-002`,
+        medicationId: med.id,
+        batchNumber: `BN-${m.code}-002`,
+        expiryDate: batch2Exp,
+        initialQuantity: m.stock - Math.floor(m.stock / 2),
+        remainingQuantity: m.stock - Math.floor(m.stock / 2),
+        status: "ACTIVE"
+      }
+    });
+
+    console.log(`Upserted medication and batches for: ${m.name}`);
+  }
+
   console.log("Seeding finished.");
 }
 

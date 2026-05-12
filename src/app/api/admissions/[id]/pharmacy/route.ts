@@ -9,10 +9,11 @@ const DispenseSchema = z.object({
 
 export async function POST(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const admissionId = params.id;
+    const { id } = await params;
+    const admissionId = id;
     const body = await req.json();
     const { medicationId, quantity } = DispenseSchema.parse(body);
 
@@ -29,22 +30,60 @@ export async function POST(
       return NextResponse.json({ error: "Insufficient stock" }, { status: 400 });
     }
 
-    // 2. Perform transaction: Update stock, create transaction record, and add to invoice
+    // 2. Perform transaction: FEFO (First Expiry First Out)
     const result = await prisma.$transaction(async (tx) => {
-      // a. Update Medication Stock
-      const updatedMed = await tx.medication.update({
-        where: { id: medicationId },
-        data: { stock: { decrement: quantity } }
+      // a. Get active batches sorted by expiry date
+      const activeBatches = await tx.stockBatch.findMany({
+        where: {
+          medicationId,
+          remainingQuantity: { gt: 0 },
+          status: "ACTIVE"
+        },
+        orderBy: { expiryDate: "asc" }
       });
 
-      // b. Create Inventory Transaction
-      await tx.inventoryTransaction.create({
-        data: {
-          medicationId,
-          type: "DISPENSE",
-          quantity: -quantity,
-          referenceId: admissionId,
-        }
+      let remainingToDispense = quantity;
+      const transactions = [];
+
+      for (const batch of activeBatches) {
+        if (remainingToDispense <= 0) break;
+
+        const dispenseFromBatch = Math.min(batch.remainingQuantity, remainingToDispense);
+        
+        // Update batch
+        const updatedBatch = await tx.stockBatch.update({
+          where: { id: batch.id },
+          data: {
+            remainingQuantity: { decrement: dispenseFromBatch },
+            status: batch.remainingQuantity - dispenseFromBatch === 0 ? "DEPLETED" : "ACTIVE"
+          }
+        });
+
+        // Create transaction for this batch
+        const trans = await tx.inventoryTransaction.create({
+          data: {
+            medicationId,
+            batchId: batch.id,
+            type: "DISPENSE",
+            quantity: -dispenseFromBatch,
+            batchNumber: batch.batchNumber,
+            expiryDate: batch.expiryDate,
+            referenceId: admissionId,
+          }
+        });
+
+        transactions.push(trans);
+        remainingToDispense -= dispenseFromBatch;
+      }
+
+      if (remainingToDispense > 0) {
+        throw new Error("Insufficient stock across all active batches");
+      }
+
+      // b. Update Medication Total Stock
+      await tx.medication.update({
+        where: { id: medicationId },
+        data: { stock: { decrement: quantity } }
       });
 
       // c. Get or create invoice
@@ -114,12 +153,13 @@ export async function POST(
 
 export async function GET(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const transactions = await prisma.inventoryTransaction.findMany({
       where: { 
-        referenceId: params.id,
+        referenceId: id,
         type: "DISPENSE"
       },
       include: { medication: true },

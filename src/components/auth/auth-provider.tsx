@@ -1,15 +1,18 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { User, Role, Permission, hasPermission, ROLE_PERMISSIONS } from "@/lib/auth";
+import { User, Role, Permission, hasPermission } from "@/lib/auth";
+import { useRouter } from "next/navigation";
 
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   hasPermission: (permission: Permission) => boolean;
   hasRole: (role: Role | Role[]) => boolean;
-  login: (role: Role) => void;
+  login: (role: Role) => void; // Keep for mock/dev
   logout: () => void;
+  realLogin: (user: User) => void;
+  realLogout: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -17,25 +20,43 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
-    // Simulate fetching user session
-    const savedUser = localStorage.getItem("his_user");
-    if (savedUser) {
-      setUser(JSON.parse(savedUser));
-    } else {
-      // Default to ADMIN for development purposes if nothing is set
-      const defaultUser: User = {
-        id: "1",
-        name: "Admin User",
-        role: "ADMIN"
-      };
-      setUser(defaultUser);
-      localStorage.setItem("his_user", JSON.stringify(defaultUser));
+    async function fetchSession() {
+      try {
+        const res = await fetch("/api/auth/me");
+        if (res.ok) {
+          const data = await res.json();
+          setUser(data.user);
+        } else {
+          setUser(null);
+        }
+      } catch (error) {
+        console.error("Session fetch failed:", error);
+        setUser(null);
+      } finally {
+        setIsLoading(false);
+      }
     }
-    setIsLoading(false);
+    fetchSession();
   }, []);
 
+  const realLogin = (userData: User) => {
+    setUser(userData);
+  };
+
+  const realLogout = async () => {
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+      setUser(null);
+      router.push("/login");
+    } catch (error) {
+      console.error("Logout failed:", error);
+    }
+  };
+
+  // Keep mock login for the header role switcher dev tool
   const login = (role: Role) => {
     const newUser: User = {
       id: Math.random().toString(36).substr(2, 9),
@@ -43,12 +64,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       role: role
     };
     setUser(newUser);
-    localStorage.setItem("his_user", JSON.stringify(newUser));
   };
 
   const logout = () => {
-    setUser(null);
-    localStorage.removeItem("his_user");
+    realLogout();
   };
 
   const checkPermission = (permission: Permission) => {
@@ -71,7 +90,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       hasPermission: checkPermission, 
       hasRole: checkRole,
       login,
-      logout
+      logout,
+      realLogin,
+      realLogout
     }}>
       {children}
     </AuthContext.Provider>

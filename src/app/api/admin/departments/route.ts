@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { z } from "zod";
-import { authorize } from "@/lib/auth";
+import { authorize } from "@/lib/auth-server";
 
 export const dynamic = "force-dynamic";
 
@@ -44,7 +44,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: error.message }, { status: 403 });
     }
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: error.errors }, { status: 400 });
+      return NextResponse.json({ error: error.issues }, { status: 400 });
     }
     return NextResponse.json({ error: "Failed to create department" }, { status: 500 });
   }

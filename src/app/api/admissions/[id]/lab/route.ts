@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { z } from "zod";
+import { authorize } from "@/lib/auth-server";
 
 const LabOrderSchema = z.object({
   testId: z.string(),
@@ -8,9 +9,11 @@ const LabOrderSchema = z.object({
 
 export async function POST(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
+    const user = await authorize("create_lab_orders");
     const body = await req.json();
     const validated = LabOrderSchema.parse(body);
 
@@ -20,35 +23,44 @@ export async function POST(
 
     const labOrder = await prisma.labOrder.create({
       data: {
-        admissionId: params.id,
+        admissionId: id,
         testId: validated.testId,
         orderNumber,
-        status: "PENDING"
+        status: "PENDING",
+        orderedByUserId: user.id
       },
       include: { test: true }
     });
 
     return NextResponse.json(labOrder, { status: 201 });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Lab Order Error:", error);
+    if (error.message?.includes("Unauthorized")) {
+      return NextResponse.json({ error: error.message }, { status: 403 });
+    }
     return NextResponse.json({ error: "Failed to place lab order" }, { status: 500 });
   }
 }
 
 export async function GET(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
+    await authorize("view_lab_orders");
     const orders = await prisma.labOrder.findMany({
-      where: { admissionId: params.id },
+      where: { admissionId: id },
       include: { test: true },
       orderBy: { createdAt: "desc" }
     });
 
     return NextResponse.json(orders);
-  } catch (error) {
+  } catch (error: any) {
     console.error("Fetch Lab Orders Error:", error);
+    if (error.message?.includes("Unauthorized")) {
+      return NextResponse.json({ error: error.message }, { status: 403 });
+    }
     return NextResponse.json({ error: "Failed to fetch lab orders" }, { status: 500 });
   }
 }

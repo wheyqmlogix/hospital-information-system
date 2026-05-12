@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { z } from "zod";
-import { authorize } from "@/lib/auth";
+import { authorize } from "@/lib/auth-server";
 
 const PatientSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
@@ -122,7 +122,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: error.message }, { status: 403 });
     }
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: error.errors }, { status: 400 });
+      return NextResponse.json({ error: error.issues }, { status: 400 });
     }
     return NextResponse.json({ error: "Failed to register patient" }, { status: 500 });
   }

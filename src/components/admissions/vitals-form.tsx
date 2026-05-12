@@ -19,14 +19,14 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 
 const vitalsSchema = z.object({
-  bpSystolic: z.coerce.number().int().min(40).max(300).optional().nullable(),
-  bpDiastolic: z.coerce.number().int().min(30).max(200).optional().nullable(),
-  temperature: z.coerce.number().min(30).max(45).optional().nullable(),
-  pulseRate: z.coerce.number().int().min(20).max(250).optional().nullable(),
-  respiratoryRate: z.coerce.number().int().min(4).max(60).optional().nullable(),
-  o2Saturation: z.coerce.number().int().min(50).max(100).optional().nullable(),
-  weight: z.coerce.number().min(0.5).max(500).optional().nullable(),
-  height: z.coerce.number().min(30).max(250).optional().nullable(),
+  bpSystolic: z.number().nullable().optional(),
+  bpDiastolic: z.number().nullable().optional(),
+  temperature: z.number().nullable().optional(),
+  pulseRate: z.number().nullable().optional(),
+  respiratoryRate: z.number().nullable().optional(),
+  o2Saturation: z.number().nullable().optional(),
+  weight: z.number().nullable().optional(),
+  height: z.number().nullable().optional(),
 });
 
 type VitalsFormValues = z.infer<typeof vitalsSchema>;
@@ -42,6 +42,16 @@ export function VitalsForm({ admissionId, onSuccess, onCancel }: VitalsFormProps
 
   const form = useForm<VitalsFormValues>({
     resolver: zodResolver(vitalsSchema),
+    defaultValues: {
+      bpSystolic: null,
+      bpDiastolic: null,
+      temperature: null,
+      pulseRate: null,
+      respiratoryRate: null,
+      o2Saturation: null,
+      weight: null,
+      height: null,
+    }
   });
 
   const onSubmit = async (data: VitalsFormValues) => {

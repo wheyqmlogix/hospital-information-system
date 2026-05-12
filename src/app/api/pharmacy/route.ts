@@ -42,3 +42,26 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "Failed to fetch medications" }, { status: 500 });
   }
 }
+
+export async function POST(req: Request) {
+  try {
+    const body = await req.json();
+    const medication = await prisma.medication.create({
+      data: {
+        code: body.code,
+        name: body.name,
+        genericName: body.genericName,
+        form: body.form,
+        strength: body.strength,
+        unit: body.unit,
+        price: body.price,
+        reorderLevel: body.reorderLevel,
+        stock: 0
+      }
+    });
+    return NextResponse.json(medication, { status: 201 });
+  } catch (error) {
+    console.error("Create Medication Error:", error);
+    return NextResponse.json({ error: "Failed to create medication" }, { status: 500 });
+  }
+}

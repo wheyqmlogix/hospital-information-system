@@ -6,16 +6,17 @@ async function main() {
   try {
     const staffCount = await prisma.staff.count();
     console.log("Staff count:", staffCount);
-  } catch (e) {
+  } catch (e: any) {
     console.error("Staff access failed:", e.message);
   }
 
   try {
     const deptCount = await prisma.department.count();
-    console.log("Dept count:", deptCount);
-  } catch (e) {
+    console.log("Departments found:", deptCount);
+  } catch (e: any) {
     console.error("Dept access failed:", e.message);
   }
+
 }
 
 main().finally(() => prisma.$disconnect());

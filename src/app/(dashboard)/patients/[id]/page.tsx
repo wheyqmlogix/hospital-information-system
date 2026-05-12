@@ -15,9 +15,10 @@ import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
-export default async function PatientDetailPage({ params }: { params: { id: string } }) {
+export default async function PatientDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const patient = await prisma.patient.findUnique({
-    where: { id: params.id }
+    where: { id }
   });
 
   if (!patient) {

@@ -14,10 +14,11 @@ const ItemSchema = z.object({
 
 export async function POST(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const admissionId = params.id;
+    const { id } = await params;
+    const admissionId = id;
     const body = await req.json();
     const validated = ItemSchema.parse(body);
 
@@ -61,6 +62,8 @@ export async function POST(
     }));
 
     const totals = calculatePHBilling(billingItems, isSeniorOrPWD, Number(invoice.philHealthAmount));
+    const paidAmount = Number(invoice.paidAmount);
+    const balance = totals.netAmount - paidAmount;
 
     const updatedInvoice = await prisma.invoice.update({
       where: { id: invoice.id },
@@ -69,7 +72,9 @@ export async function POST(
         vatAmount: totals.vatAmount,
         discountAmount: totals.discountAmount,
         philHealthAmount: totals.philHealthAmount,
-        netAmount: totals.netAmount
+        netAmount: totals.netAmount,
+        balance: balance,
+        status: balance <= 0 ? "PAID" : (paidAmount > 0 ? "PARTIALLY_PAID" : "UNPAID")
       },
       include: { items: true }
     });
@@ -78,7 +83,7 @@ export async function POST(
   } catch (error) {
     console.error("Add Invoice Item Error:", error);
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: error.errors }, { status: 400 });
+      return NextResponse.json({ error: error.issues }, { status: 400 });
     }
     return NextResponse.json({ error: "Failed to add item" }, { status: 500 });
   }

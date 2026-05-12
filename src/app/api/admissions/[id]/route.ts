@@ -1,13 +1,16 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { authorize } from "@/lib/auth-server";
 
 export async function GET(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
+    await authorize("view_admissions");
     const admission = await prisma.admission.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         patient: true,
         primaryCaseRate: true
@@ -19,22 +22,27 @@ export async function GET(
     }
 
     return NextResponse.json(admission);
-  } catch (error) {
+  } catch (error: any) {
     console.error("Fetch Admission Error:", error);
+    if (error.message?.includes("Unauthorized")) {
+      return NextResponse.json({ error: error.message }, { status: 403 });
+    }
     return NextResponse.json({ error: "Failed to fetch admission" }, { status: 500 });
   }
 }
 
 export async function PATCH(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
+    await authorize("create_admissions");
     const body = await req.json();
     const { finalDiagnosis, primaryCaseRateId, status } = body;
 
     const updated = await prisma.admission.update({
-      where: { id: params.id },
+      where: { id },
       data: {
         finalDiagnosis,
         primaryCaseRateId,
@@ -51,7 +59,7 @@ export async function PATCH(
       const caseRate = await prisma.caseRate.findUnique({ where: { id: primaryCaseRateId } });
       if (caseRate) {
         await prisma.invoice.update({
-          where: { admissionId: params.id },
+          where: { admissionId: id },
           data: {
             philHealthAmount: caseRate.totalAmount
           }
@@ -59,7 +67,7 @@ export async function PATCH(
         
         // Trigger recalculation of netAmount
         const invoice = await prisma.invoice.findUnique({
-          where: { admissionId: params.id },
+          where: { admissionId: id },
           include: { items: true }
         });
         
@@ -85,8 +93,11 @@ export async function PATCH(
     }
 
     return NextResponse.json(updated);
-  } catch (error) {
+  } catch (error: any) {
     console.error("Update Admission Error:", error);
+    if (error.message?.includes("Unauthorized")) {
+      return NextResponse.json({ error: error.message }, { status: 403 });
+    }
     return NextResponse.json({ error: "Failed to update admission" }, { status: 500 });
   }
 }
