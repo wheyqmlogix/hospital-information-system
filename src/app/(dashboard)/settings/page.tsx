@@ -10,7 +10,11 @@ import {
   ShieldCheck,
   MapPin,
   Edit,
-  Trash2
+  Trash2,
+  Map,
+  Home,
+  Bed as BedIcon,
+  Settings2
 } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -19,6 +23,10 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { ConfirmationModal } from "@/components/ui/confirmation-modal";
+import { WardModal } from "@/components/staff/ward-modal";
+import { RoomModal } from "@/components/staff/room-modal";
+import { BedModal } from "@/components/staff/bed-modal";
+import { BedStatusModal } from "@/components/staff/bed-status-modal";
 
 interface StaffMember {
   id: string;
@@ -46,14 +54,36 @@ interface Department {
   };
 }
 
+interface Bed {
+  id: string;
+  name: string;
+  status: "VACANT" | "OCCUPIED" | "MAINTENANCE" | "CLEANING";
+}
+
+interface Room {
+  id: string;
+  name: string;
+  beds: Bed[];
+}
+
+interface Ward {
+  id: string;
+  name: string;
+  description?: string;
+  rooms: Room[];
+}
+
 export default function SettingsPage() {
-  const [activeTab, setActiveTab] = useState<"staff" | "departments">("staff");
+  const [activeTab, setActiveTab] = useState<"staff" | "departments" | "infrastructure">("staff");
   const [staff, setStaff] = useState<StaffMember[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
+  const [wards, setWards] = useState<Ward[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Modal States
   const [confirmModal, setConfirmModal] = useState<{
     isOpen: boolean;
-    type: "department" | "staff";
+    type: "department" | "staff" | "ward" | "room" | "bed";
     id: string | null;
   }>({
     isOpen: false,
@@ -61,17 +91,41 @@ export default function SettingsPage() {
     id: null,
   });
 
+  const [wardModal, setWardModal] = useState<{ isOpen: boolean; data: any | null }>({
+    isOpen: false,
+    data: null,
+  });
+
+  const [roomModal, setRoomModal] = useState<{ isOpen: boolean; wardId: string | null; data: any | null }>({
+    isOpen: false,
+    wardId: null,
+    data: null,
+  });
+
+  const [bedModal, setBedModal] = useState<{ isOpen: boolean; roomId: string | null; data: any | null }>({
+    isOpen: false,
+    roomId: null,
+    data: null,
+  });
+
+  const [bedStatusModal, setBedStatusModal] = useState<{ isOpen: boolean; bed: any | null }>({
+    isOpen: false,
+    bed: null,
+  });
+
   const fetchData = async () => {
     await Promise.resolve();
     setLoading(true);
     try {
-      const [staffRes, deptRes] = await Promise.all([
+      const [staffRes, deptRes, wardRes] = await Promise.all([
         fetch("/api/admin/staff", { cache: 'no-store' }),
-        fetch("/api/admin/departments", { cache: 'no-store' })
+        fetch("/api/admin/departments", { cache: 'no-store' }),
+        fetch("/api/admin/wards", { cache: 'no-store' })
       ]);
       
       if (staffRes.ok) setStaff(await staffRes.json());
       if (deptRes.ok) setDepartments(await deptRes.json());
+      if (wardRes.ok) setWards(await wardRes.json());
     } catch (error: unknown) {
       console.error(error);
     } finally {
@@ -109,6 +163,51 @@ export default function SettingsPage() {
     }
   };
 
+  const deleteWard = async (id: string) => {
+    try {
+      const res = await fetch(`/api/admin/wards/${id}`, { method: "DELETE" });
+      if (res.ok) {
+        toast.success("Ward removed from facility");
+        fetchData();
+      } else {
+        const error = await res.json();
+        toast.error(error.error || "Failed to remove ward");
+      }
+    } catch (error) {
+      toast.error("Audit Failure: System Communication Error");
+    }
+  };
+
+  const deleteRoom = async (id: string) => {
+    try {
+      const res = await fetch(`/api/admin/rooms/${id}`, { method: "DELETE" });
+      if (res.ok) {
+        toast.success("Room removed from ward");
+        fetchData();
+      } else {
+        const error = await res.json();
+        toast.error(error.error || "Failed to remove room");
+      }
+    } catch (error) {
+      toast.error("Audit Failure: System Communication Error");
+    }
+  };
+
+  const deleteBed = async (id: string) => {
+    try {
+      const res = await fetch(`/api/admin/beds/${id}`, { method: "DELETE" });
+      if (res.ok) {
+        toast.success("Bed removed from room");
+        fetchData();
+      } else {
+        const error = await res.json();
+        toast.error(error.error || "Failed to remove bed");
+      }
+    } catch (error) {
+      toast.error("Audit Failure: System Communication Error");
+    }
+  };
+
   useEffect(() => {
     Promise.resolve().then(() => fetchData());
   }, [activeTab]);
@@ -124,12 +223,22 @@ export default function SettingsPage() {
           <Button variant="outline" onClick={fetchData} className="h-9 px-6 rounded-sm border-slate-300 text-[9px] font-black uppercase tracking-widest">
             Registry Sync
           </Button>
-          <Link href={activeTab === "staff" ? "/settings/staff/new" : "/settings/departments/new"}>
-            <Button className="bg-[#0f172a] text-white h-9 px-6 rounded-sm text-[9px] font-black uppercase tracking-widest shadow-sm">
+          {activeTab !== "infrastructure" ? (
+            <Link href={activeTab === "staff" ? "/settings/staff/new" : "/settings/departments/new"}>
+              <Button className="bg-[#0f172a] text-white h-9 px-6 rounded-sm text-[9px] font-black uppercase tracking-widest shadow-sm">
+                <Plus className="h-3.5 w-3.5 mr-2" />
+                {activeTab === "staff" ? "Provision Staff Account" : "Initialize Department"}
+              </Button>
+            </Link>
+          ) : (
+            <Button 
+              onClick={() => setWardModal({ isOpen: true, data: null })}
+              className="bg-[#0f172a] text-white h-9 px-6 rounded-sm text-[9px] font-black uppercase tracking-widest shadow-sm"
+            >
               <Plus className="h-3.5 w-3.5 mr-2" />
-              {activeTab === "staff" ? "Provision Staff Account" : "Initialize Department"}
+              Provision New Ward
             </Button>
-          </Link>
+          )}
         </div>
       </div>
 
@@ -149,7 +258,7 @@ export default function SettingsPage() {
         <button
           onClick={() => setActiveTab("departments")}
           className={cn(
-            "flex items-center gap-2 px-6 py-2.5 text-[9px] font-black uppercase tracking-[0.15em] transition-all",
+            "flex items-center gap-2 px-6 py-2.5 text-[9px] font-black uppercase tracking-[0.15em] transition-all border-r border-slate-100",
             activeTab === "departments" 
               ? "bg-slate-50 text-[#0f172a] border-b-2 border-b-[#0f172a]" 
               : "text-slate-400 hover:text-slate-700 hover:bg-slate-50/50"
@@ -157,6 +266,18 @@ export default function SettingsPage() {
         >
           <Building2 className="h-3.5 w-3.5" />
           Unit Hierarchy
+        </button>
+        <button
+          onClick={() => setActiveTab("infrastructure")}
+          className={cn(
+            "flex items-center gap-2 px-6 py-2.5 text-[9px] font-black uppercase tracking-[0.15em] transition-all",
+            activeTab === "infrastructure" 
+              ? "bg-slate-50 text-[#0f172a] border-b-2 border-b-[#0f172a]" 
+              : "text-slate-400 hover:text-slate-700 hover:bg-slate-50/50"
+          )}
+        >
+          <Map className="h-3.5 w-3.5" />
+          Facility Infrastructure
         </button>
       </div>
 
@@ -245,7 +366,7 @@ export default function SettingsPage() {
               </div>
             </CardContent>
           </Card>
-        ) : (
+        ) : activeTab === "departments" ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {loading ? (
               <div className="col-span-full py-20 text-center animate-pulse text-[9px] font-black text-slate-300 uppercase tracking-widest">Synchronizing Unit Hierarchy...</div>
@@ -295,25 +416,180 @@ export default function SettingsPage() {
               </Card>
             ))}
           </div>
+        ) : (
+          <div className="space-y-6">
+            {loading ? (
+              <div className="py-20 text-center animate-pulse text-[9px] font-black text-slate-300 uppercase tracking-widest">Scanning Facility Map...</div>
+            ) : wards.length === 0 ? (
+              <div className="py-20 text-center text-[9px] font-black text-slate-300 uppercase tracking-widest">No Facility Infrastructure Configured</div>
+            ) : wards.map((ward) => (
+              <Card key={ward.id} className="border-slate-200 rounded-sm overflow-hidden bg-white shadow-sm">
+                <div className="px-8 py-5 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className="h-10 w-10 rounded-sm bg-[#0f172a] text-white flex items-center justify-center">
+                      <Map className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-black text-[#0f172a] uppercase tracking-tight">{ward.name}</h3>
+                      <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">{ward.description || "Clinical Ward Designation"}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      onClick={() => setWardModal({ isOpen: true, data: ward })}
+                      className="h-8 w-8 text-slate-300 hover:text-[#0f172a] hover:bg-slate-50 transition-all"
+                    >
+                      <Edit className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      onClick={() => setConfirmModal({ isOpen: true, type: "ward", id: ward.id })}
+                      className="h-8 w-8 text-slate-300 hover:text-red-600 hover:bg-red-50 transition-all"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                </div>
+                <CardContent className="p-8">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {ward.rooms.map((room) => (
+                      <div key={room.id} className="border border-slate-100 rounded-sm p-5 bg-slate-50/30">
+                        <div className="flex items-center justify-between mb-4">
+                          <h4 className="text-[10px] font-black text-[#0f172a] uppercase tracking-widest flex items-center">
+                            <Home className="h-3 w-3 mr-2 text-slate-400" />
+                            {room.name}
+                          </h4>
+                          <div className="flex items-center gap-1">
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              onClick={() => setRoomModal({ isOpen: true, wardId: ward.id, data: room })}
+                              className="h-6 w-6 text-slate-300 hover:text-[#0f172a]"
+                            >
+                              <Edit className="h-3.5 w-3.5" />
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              onClick={() => setConfirmModal({ isOpen: true, type: "room", id: room.id })}
+                              className="h-6 w-6 text-slate-300 hover:text-red-600"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          {room.beds.map((bed) => (
+                            <div key={bed.id} className="flex items-center justify-between bg-white border border-slate-100 p-2 rounded-[1px]">
+                              <div className="flex items-center gap-2">
+                                <BedIcon className="h-3 w-3 text-slate-300" />
+                                <span className="text-[9px] font-black text-slate-500 uppercase tracking-tight">{bed.name}</span>
+                                <span className={cn(
+                                  "text-[7px] font-black px-1.5 py-0.5 rounded-[1px] uppercase tracking-tighter",
+                                  bed.status === 'VACANT' ? "bg-green-50 text-green-600 border border-green-100" :
+                                  bed.status === 'OCCUPIED' ? "bg-[#0f172a] text-white" :
+                                  "bg-amber-50 text-amber-600 border border-amber-100"
+                                )}>
+                                  {bed.status}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon" 
+                                  onClick={() => setBedStatusModal({ isOpen: true, bed })}
+                                  className="h-5 w-5 text-slate-200 hover:text-[#0f172a]"
+                                >
+                                  <Settings2 className="h-3 w-3" />
+                                </Button>
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon" 
+                                  onClick={() => setConfirmModal({ isOpen: true, type: "bed", id: bed.id })}
+                                  className="h-5 w-5 text-slate-200 hover:text-red-600"
+                                >
+                                  <Trash2 className="h-3 w-3" />
+                                </Button>
+                              </div>
+                            </div>
+                          ))}
+                          <Button 
+                            variant="ghost" 
+                            onClick={() => setBedModal({ isOpen: true, roomId: room.id, data: null })}
+                            className="w-full h-7 border border-dashed border-slate-200 text-[8px] font-black uppercase tracking-widest text-slate-400 hover:bg-slate-50 hover:text-[#0f172a] mt-2"
+                          >
+                            <Plus className="h-2.5 w-2.5 mr-1" />
+                            Add Bed
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                    <button 
+                      onClick={() => setRoomModal({ isOpen: true, wardId: ward.id, data: null })}
+                      className="border-2 border-dashed border-slate-100 rounded-sm p-6 flex flex-col items-center justify-center gap-2 hover:bg-slate-50 transition-all group"
+                    >
+                      <div className="h-8 w-8 rounded-full bg-slate-50 flex items-center justify-center group-hover:bg-[#0f172a] group-hover:text-white transition-colors">
+                        <Plus className="h-4 w-4" />
+                      </div>
+                      <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Provision New Room</span>
+                    </button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         )}
       </div>
 
+      <WardModal 
+        isOpen={wardModal.isOpen} 
+        onClose={() => setWardModal({ isOpen: false, data: null })} 
+        onSuccess={fetchData} 
+        initialData={wardModal.data} 
+      />
+
+      <RoomModal 
+        isOpen={roomModal.isOpen} 
+        onClose={() => setRoomModal({ isOpen: false, wardId: null, data: null })} 
+        onSuccess={fetchData} 
+        wardId={roomModal.wardId}
+        initialData={roomModal.data} 
+      />
+
+      <BedModal 
+        isOpen={bedModal.isOpen} 
+        onClose={() => setBedModal({ isOpen: false, roomId: null, data: null })} 
+        onSuccess={fetchData} 
+        roomId={bedModal.roomId}
+        initialData={bedModal.data} 
+      />
+
+      <BedStatusModal
+        isOpen={bedStatusModal.isOpen}
+        onClose={() => setBedStatusModal({ isOpen: false, bed: null })}
+        onSuccess={fetchData}
+        bed={bedStatusModal.bed}
+      />
+
       <ConfirmationModal
         isOpen={confirmModal.isOpen}
-        onClose={() => setConfirmModal({ isOpen: false, type: "department", id: null })}
+        onClose={() => setConfirmModal({ ...confirmModal, isOpen: false })}
         onConfirm={() => {
           if (confirmModal.id) {
-            if (confirmModal.type === "department") {
-              deleteDepartment(confirmModal.id);
-            } else {
-              deleteStaff(confirmModal.id);
+            switch(confirmModal.type) {
+              case "department": deleteDepartment(confirmModal.id); break;
+              case "staff": deleteStaff(confirmModal.id); break;
+              case "ward": deleteWard(confirmModal.id); break;
+              case "room": deleteRoom(confirmModal.id); break;
+              case "bed": deleteBed(confirmModal.id); break;
             }
           }
         }}
-        title={confirmModal.type === "department" ? "Delete Department" : "Delete Personnel"}
-        message={confirmModal.type === "department" 
-          ? "Are you sure you want to delete this department? This action cannot be undone and is only possible if no personnel are assigned."
-          : "Are you sure you want to delete this staff member? This will also remove their system account. This action cannot be undone."}
+        title={`Delete ${confirmModal.type.charAt(0).toUpperCase() + confirmModal.type.slice(1)}`}
+        message={`Are you sure you want to delete this ${confirmModal.type}? This action cannot be undone and is only possible if there are no active dependencies (assigned personnel or active occupancy).`}
         confirmText="Remove from Registry"
         variant="danger"
       />

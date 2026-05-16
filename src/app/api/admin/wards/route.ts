@@ -1,6 +1,12 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { authorize } from "@/lib/auth-server";
+import { z } from "zod";
+
+const WardSchema = z.object({
+  name: z.string().min(1),
+  description: z.string().optional(),
+});
 
 export async function GET() {
   try {
@@ -97,5 +103,24 @@ export async function GET() {
       return NextResponse.json({ error: error.message }, { status: 403 });
     }
     return NextResponse.json({ error: "Failed to fetch ward map" }, { status: 500 });
+  }
+}
+
+export async function POST(req: Request) {
+  try {
+    await authorize("system_admin");
+    const body = await req.json();
+    const validated = WardSchema.parse(body);
+
+    const ward = await prisma.ward.create({
+      data: validated
+    });
+
+    return NextResponse.json(ward, { status: 201 });
+  } catch (error: any) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json({ error: error.issues }, { status: 400 });
+    }
+    return NextResponse.json({ error: "Failed to create ward" }, { status: 500 });
   }
 }
