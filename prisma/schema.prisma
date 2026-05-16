@@ -277,17 +277,19 @@ model CaseRate {
 }
 
 model User {
-  id                String    @id @default(cuid())
-  email             String    @unique
-  password          String
-  name              String
-  role              StaffRole @default(NURSE)
-  staffId           String?   @unique
-  invitationToken   String?   @unique
-  invitationExpires DateTime?
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
-  staff             Staff?    @relation(fields: [staffId], references: [id])
+  id                   String    @id @default(cuid())
+  email                String    @unique
+  password             String
+  name                 String
+  role                 StaffRole @default(NURSE)
+  staffId              String?   @unique
+  invitationToken      String?   @unique
+  invitationExpires    DateTime?
+  resetPasswordToken   String?   @unique
+  resetPasswordExpires DateTime?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+  staff                Staff?    @relation(fields: [staffId], references: [id])
 }
 
 model Department {

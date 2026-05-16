@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -73,7 +74,7 @@ export default function LoginPage() {
             <div className="space-y-2">
               <div className="flex justify-between items-center ml-1">
                 <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Password</label>
-                <button type="button" className="text-[10px] font-black uppercase tracking-widest text-[#0f172a] hover:underline">Forgot?</button>
+                <Link href="/forgot-password" title="Forgot Password" className="text-[10px] font-black uppercase tracking-widest text-[#0f172a] hover:underline">Forgot?</Link>
               </div>
               <div className="relative">
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300" />
