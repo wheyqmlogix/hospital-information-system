@@ -28,7 +28,6 @@ const staffSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
   lastName: z.string().min(1, "Last name is required"),
   email: z.string().email("Invalid email address"),
-  password: z.string().min(6, "Password must be at least 6 characters").optional().or(z.literal("")),
   role: z.enum(["ADMIN", "DOCTOR", "NURSE", "BILLING", "PHARMACY", "LABORATORY"]),
   departmentId: z.string().optional().nullable(),
   specialization: z.string().optional().nullable(),
@@ -69,7 +68,6 @@ export function StaffForm({ onSuccess, onCancel, departments, initialData }: Sta
       role: initialData.role as any,
       departmentId: initialData.departmentId || undefined,
       specialization: initialData.specialization || "",
-      password: "",
     } : {
       role: "NURSE"
     }
@@ -128,15 +126,6 @@ export function StaffForm({ onSuccess, onCancel, departments, initialData }: Sta
           </Label>
           <Input {...register("email")} type="email" placeholder="juan.dc@hospital.com" className="h-9 text-[11px] font-bold" />
           {errors.email && <p className="text-[9px] text-red-500 font-bold uppercase mt-1">{errors.email.message}</p>}
-        </div>
-
-        <div className="space-y-1.5">
-          <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center">
-            <Lock className="h-3 w-3 mr-2" />
-            {initialData ? "New Password (Leave blank to keep current)" : "Password"}
-          </Label>
-          <Input {...register("password")} type="password" placeholder="••••••••" className="h-9 text-[11px] font-bold" />
-          {errors.password && <p className="text-[9px] text-red-500 font-bold uppercase mt-1">{errors.password.message}</p>}
         </div>
 
         <div className="space-y-1.5">

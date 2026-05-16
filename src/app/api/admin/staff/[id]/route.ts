@@ -11,7 +11,6 @@ const StaffUpdateSchema = z.object({
   specialization: z.string().optional().nullable(),
   departmentId: z.string().optional().nullable(),
   email: z.string().email(),
-  password: z.string().min(6).optional().nullable(),
 });
 
 export async function GET(
@@ -68,19 +67,13 @@ export async function PATCH(
       });
 
       // 2. Update User
-      const userData: any = {
-        email: validated.email,
-        name: `${validated.firstName} ${validated.lastName}`,
-        role: validated.role,
-      };
-
-      if (validated.password) {
-        userData.password = await bcrypt.hash(validated.password, 10);
-      }
-
       await tx.user.update({
         where: { staffId: id },
-        data: userData
+        data: {
+          email: validated.email,
+          name: `${validated.firstName} ${validated.lastName}`,
+          role: validated.role,
+        }
       });
 
       return updatedStaff;

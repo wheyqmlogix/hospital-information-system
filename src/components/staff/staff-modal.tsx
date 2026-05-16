@@ -128,15 +128,6 @@ export function StaffModal({ isOpen, onClose, onSuccess, departments }: StaffMod
 
             <div className="space-y-2">
               <label className="text-sm font-bold text-slate-700 flex items-center">
-                <Lock className="h-4 w-4 mr-2 text-slate-400" />
-                Password
-              </label>
-              <Input {...register("password")} type="password" placeholder="••••••••" />
-              {errors.password && <p className="text-xs text-red-500 font-medium">{errors.password.message}</p>}
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-bold text-slate-700 flex items-center">
                 <Shield className="h-4 w-4 mr-2 text-slate-400" />
                 System Role
               </label>
@@ -184,6 +175,19 @@ export function StaffModal({ isOpen, onClose, onSuccess, departments }: StaffMod
           </div>
 
           <div className="flex items-center justify-end space-x-3 pt-4 border-t border-slate-100">
+            <Button type="button" variant="ghost" onClick={onClose} disabled={isSubmitting}>
+              Cancel
+            </Button>
+            <Button type="submit" variant="medical" disabled={isSubmitting}>
+              {isSubmitting ? "Creating..." : "Register Staff Member"}
+            </Button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+pt-4 border-t border-slate-100">
             <Button type="button" variant="ghost" onClick={onClose} disabled={isSubmitting}>
               Cancel
             </Button>
