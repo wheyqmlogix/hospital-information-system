@@ -27,9 +27,16 @@ type DepartmentFormValues = z.infer<typeof departmentSchema>;
 interface DepartmentFormProps {
   onSuccess: () => void;
   onCancel?: () => void;
+  initialData?: {
+    id: string;
+    name: string;
+    code: string;
+    description: string | null;
+    location: string | null;
+  };
 }
 
-export function DepartmentForm({ onSuccess, onCancel }: DepartmentFormProps) {
+export function DepartmentForm({ onSuccess, onCancel, initialData }: DepartmentFormProps) {
   const {
     register,
     handleSubmit,
@@ -37,23 +44,33 @@ export function DepartmentForm({ onSuccess, onCancel }: DepartmentFormProps) {
     formState: { errors, isSubmitting }
   } = useForm<DepartmentFormValues>({
     resolver: zodResolver(departmentSchema),
+    defaultValues: initialData ? {
+      name: initialData.name,
+      code: initialData.code,
+      description: initialData.description || "",
+      location: initialData.location || "",
+    } : undefined
   });
 
   const onSubmit = async (data: DepartmentFormValues) => {
     try {
-      const response = await fetch("/api/admin/departments", {
-        method: "POST",
+      const url = initialData 
+        ? `/api/admin/departments/${initialData.id}`
+        : "/api/admin/departments";
+      
+      const response = await fetch(url, {
+        method: initialData ? "PATCH" : "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.error || "Failed to create department");
+        throw new Error(error.error || `Failed to ${initialData ? "update" : "create"} department`);
       }
 
-      toast.success("Department created successfully");
-      reset();
+      toast.success(`Department ${initialData ? "updated" : "created"} successfully`);
+      if (!initialData) reset();
       onSuccess();
     } catch (error: any) {
       toast.error(error.message);
@@ -111,7 +128,7 @@ export function DepartmentForm({ onSuccess, onCancel }: DepartmentFormProps) {
           </Button>
         )}
         <Button type="submit" className="bg-[#0f172a] text-white px-8 text-[10px] font-black uppercase tracking-widest h-10 shadow-sm" disabled={isSubmitting}>
-          {isSubmitting ? "Processing..." : "Create Department"}
+          {isSubmitting ? "Processing..." : initialData ? "Update Department" : "Create Department"}
         </Button>
       </div>
     </form>

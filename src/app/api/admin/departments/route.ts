@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { z } from "zod";
 import { authorize } from "@/lib/auth-server";
+import { Prisma } from "@prisma/client";
 
 export const dynamic = "force-dynamic";
 
@@ -16,9 +17,14 @@ export async function GET() {
   try {
     console.log("GET /api/admin/departments - Checking authorization");
     await authorize("system_admin");
-    console.log("GET /api/admin/departments - Authorized, fetching departments with staff count");
+    console.log("GET /api/admin/departments - Authorized, fetching departments");
     const departments = await prisma.department.findMany({
-      orderBy: { name: "asc" }
+      orderBy: { name: "asc" },
+      include: {
+        _count: {
+          select: { staff: true }
+        }
+      }
     });
     console.log(`GET /api/admin/departments - Found ${departments.length} departments`);
     return NextResponse.json(departments);
@@ -45,6 +51,11 @@ export async function POST(req: Request) {
     }
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: error.issues }, { status: 400 });
+    }
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      if (error.code === "P2002") {
+        return NextResponse.json({ error: "Department code already in use" }, { status: 400 });
+      }
     }
     return NextResponse.json({ error: "Failed to create department" }, { status: 500 });
   }

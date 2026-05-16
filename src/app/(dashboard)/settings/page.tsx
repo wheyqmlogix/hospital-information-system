@@ -8,7 +8,9 @@ import {
   Search, 
   MoreVertical, 
   ShieldCheck,
-  MapPin
+  MapPin,
+  Edit,
+  Trash2
 } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -16,6 +18,7 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
+import { ConfirmationModal } from "@/components/ui/confirmation-modal";
 
 interface StaffMember {
   id: string;
@@ -48,6 +51,13 @@ export default function SettingsPage() {
   const [staff, setStaff] = useState<StaffMember[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [loading, setLoading] = useState(true);
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    departmentId: string | null;
+  }>({
+    isOpen: false,
+    departmentId: null,
+  });
 
   const fetchData = async () => {
     await Promise.resolve();
@@ -64,6 +74,21 @@ export default function SettingsPage() {
       console.error(error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const deleteDepartment = async (id: string) => {
+    try {
+      const res = await fetch(`/api/admin/departments/${id}`, { method: "DELETE" });
+      if (res.ok) {
+        toast.success("Department removed from registry");
+        fetchData();
+      } else {
+        const error = await res.json();
+        toast.error(error.error || "Failed to remove department");
+      }
+    } catch (error) {
+      toast.error("Audit Failure: System Communication Error");
     }
   };
 
@@ -204,9 +229,21 @@ export default function SettingsPage() {
                     <div className="h-10 w-10 rounded-[1px] bg-slate-50 flex items-center justify-center border border-slate-100 group-hover:bg-[#0f172a] group-hover:text-white transition-colors">
                       <Building2 className="h-5 w-5" />
                     </div>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-300 group-hover:text-slate-600 transition-colors">
-                      <MoreVertical className="h-4 w-4" />
-                    </Button>
+                    <div className="flex items-center gap-1">
+                      <Link href={`/settings/departments/edit/${dept.id}`}>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-300 hover:text-[#0f172a] hover:bg-slate-50 transition-all">
+                          <Edit className="h-3.5 w-3.5" />
+                        </Button>
+                      </Link>
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        onClick={() => setConfirmModal({ isOpen: true, departmentId: dept.id })}
+                        className="h-8 w-8 text-slate-300 hover:text-red-600 hover:bg-red-50 transition-all"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
                   </div>
                   <div className="space-y-1 mb-6">
                     <div className="flex items-center justify-between gap-4">
@@ -231,7 +268,20 @@ export default function SettingsPage() {
           </div>
         )}
       </div>
-...
+
+      <ConfirmationModal
+        isOpen={confirmModal.isOpen}
+        onClose={() => setConfirmModal({ isOpen: false, departmentId: null })}
+        onConfirm={() => {
+          if (confirmModal.departmentId) {
+            deleteDepartment(confirmModal.departmentId);
+          }
+        }}
+        title="Delete Department"
+        message="Are you sure you want to delete this department? This action cannot be undone and is only possible if no personnel are assigned."
+        confirmText="Remove from Registry"
+        variant="danger"
+      />
     </div>
   );
 }
