@@ -6,23 +6,23 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center whitespace-nowrap rounded-lg text-sm font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/20 disabled:pointer-events-none disabled:opacity-50 active:scale-[0.98]",
+  "inline-flex items-center justify-center whitespace-nowrap rounded-sm text-xs font-bold uppercase tracking-widest transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50",
   {
     variants: {
       variant: {
-        default: "bg-blue-600 text-white shadow-sm shadow-blue-500/20 hover:bg-blue-700",
-        destructive: "bg-red-500 text-white shadow-sm hover:bg-red-600",
-        outline: "border border-slate-200 bg-white shadow-sm hover:bg-slate-50 hover:border-slate-300 text-slate-700",
+        default: "bg-primary text-primary-foreground hover:bg-primary/90",
+        destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
+        outline: "border border-slate-300 bg-transparent hover:bg-slate-50 text-slate-900",
         secondary: "bg-slate-100 text-slate-900 hover:bg-slate-200",
-        ghost: "hover:bg-slate-100 text-slate-600 hover:text-slate-900",
-        link: "text-blue-600 underline-offset-4 hover:underline",
-        medical: "bg-gradient-to-b from-blue-500 to-blue-600 text-white shadow-md shadow-blue-500/25 hover:from-blue-600 hover:to-blue-700 border border-blue-400/20",
+        ghost: "hover:bg-slate-50 text-slate-600",
+        link: "text-primary underline-offset-4 hover:underline",
+        clinical: "bg-[#0f172a] text-white hover:bg-black border border-white/10",
       },
       size: {
-        default: "h-10 px-5 py-2",
-        sm: "h-8 rounded-md px-3 text-xs",
-        lg: "h-12 rounded-xl px-8 text-base",
-        icon: "h-10 w-10",
+        default: "h-9 px-4 py-2",
+        sm: "h-8 px-3 text-[10px]",
+        lg: "h-10 px-8 text-sm",
+        icon: "h-8 w-8",
       },
     },
     defaultVariants: {

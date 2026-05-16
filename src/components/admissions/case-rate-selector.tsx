@@ -53,9 +53,6 @@ export function CaseRateSelector({ onSelect, selectedId }: CaseRateSelectorProps
     return () => clearTimeout(timer);
   }, [query]);
 
-  // If selectedId changes, we might want to fetch it, but for now we assume it's handled by parent
-  // In a real app, we'd fetch the initial selected rate details if only ID is provided
-
   const handleSelect = (rate: CaseRate) => {
     setSelectedRate(rate);
     onSelect(rate);
@@ -66,45 +63,45 @@ export function CaseRateSelector({ onSelect, selectedId }: CaseRateSelectorProps
   return (
     <div className="space-y-4">
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
         <Input
-          placeholder="Search ICD-10 or RVS code/description..."
-          className="pl-10 h-12 rounded-xl border-slate-200 focus:ring-blue-500"
+          placeholder="Registry Search (ICD-10 / RVS Code or Descriptor)..."
+          className="pl-10 h-10 border-slate-200 focus:border-[#0f172a] focus:bg-white bg-slate-50/50"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />
         {loading && (
           <div className="absolute right-3 top-1/2 -translate-y-1/2">
-            <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
+            <Loader2 className="h-3.5 w-3.5 animate-spin text-[#0f172a]" />
           </div>
         )}
       </div>
 
       {results.length > 0 && (
-        <Card className="border-slate-100 shadow-xl rounded-2xl overflow-hidden absolute z-50 w-full max-w-md mt-1">
-          <CardContent className="p-0 max-h-[300px] overflow-y-auto">
+        <Card className="border-slate-300 shadow-2xl rounded-sm overflow-hidden absolute z-50 w-full max-w-lg mt-1 bg-white">
+          <CardContent className="p-0 max-h-[350px] overflow-y-auto">
             {results.map((rate) => (
               <button
                 key={rate.id}
                 onClick={() => handleSelect(rate)}
-                className="w-full text-left p-4 hover:bg-slate-50 border-b border-slate-50 last:border-0 transition-colors flex items-start justify-between group"
+                className="w-full text-left p-4 hover:bg-[#fcfcfc] border-b border-slate-100 last:border-0 transition-colors flex items-start justify-between group"
               >
                 <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
+                  <div className="flex items-center gap-2 mb-1.5">
                     <span className={cn(
-                      "text-[10px] font-black px-1.5 py-0.5 rounded",
-                      rate.itemType === "ICD" ? "bg-blue-100 text-blue-700" : "bg-orange-100 text-orange-700"
+                      "text-[8px] font-black px-1.5 py-0.5 rounded-[1px] border uppercase tracking-widest",
+                      rate.itemType === "ICD" ? "bg-slate-900 text-white border-slate-900" : "bg-slate-100 text-slate-600 border-slate-200"
                     )}>
                       {rate.itemType}
                     </span>
-                    <span className="font-bold text-slate-900">{rate.code}</span>
+                    <span className="text-[11px] font-black text-[#0f172a] uppercase tracking-tight">{rate.code}</span>
                   </div>
-                  <p className="text-sm text-slate-600 line-clamp-2">{rate.description}</p>
+                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-tight line-clamp-2">{rate.description}</p>
                 </div>
-                <div className="text-right ml-4">
-                  <p className="text-xs font-black text-slate-900">₱{Number(rate.totalAmount).toLocaleString()}</p>
-                  <div className="h-6 w-6 rounded-full bg-blue-50 text-blue-600 items-center justify-center hidden group-hover:flex mt-1">
-                    <Check className="h-4 w-4" />
+                <div className="text-right ml-6">
+                  <p className="text-[11px] font-black text-[#0f172a] tracking-tighter">₱{Number(rate.totalAmount).toLocaleString()}</p>
+                  <div className="h-6 w-6 rounded-[1px] bg-slate-900 text-white items-center justify-center hidden group-hover:flex mt-2">
+                    <Check className="h-3 w-3" />
                   </div>
                 </div>
               </button>
@@ -114,47 +111,47 @@ export function CaseRateSelector({ onSelect, selectedId }: CaseRateSelectorProps
       )}
 
       {selectedRate && (
-        <div className="bg-blue-50 border border-blue-100 rounded-2xl p-4 flex items-start gap-4 animate-in fade-in slide-in-from-top-2 duration-300">
-          <div className="h-10 w-10 rounded-xl bg-blue-600 text-white flex items-center justify-center shrink-0">
-            <ShieldCheck className="h-6 w-6" />
+        <div className="bg-white border border-slate-200 rounded-sm p-5 flex items-start gap-5 animate-in fade-in duration-300 shadow-sm">
+          <div className="h-9 w-9 rounded-[1px] bg-slate-50 border border-slate-100 text-[#0f172a] flex items-center justify-center shrink-0">
+            <ShieldCheck className="h-5 w-5" />
           </div>
           <div className="flex-1">
-            <div className="flex items-center gap-2 mb-1">
-               <span className="text-[10px] font-black bg-blue-200 text-blue-800 px-2 py-0.5 rounded uppercase">Selected Case Rate</span>
-               <span className="font-bold text-blue-900">{selectedRate.code}</span>
+            <div className="flex items-center gap-2 mb-2">
+               <span className="text-[8px] font-black bg-[#0f172a] text-white px-2 py-0.5 rounded-[1px] uppercase tracking-widest">Active Classification</span>
+               <span className="text-[11px] font-black text-[#0f172a] uppercase tracking-tight">{selectedRate.code}</span>
             </div>
-            <p className="text-sm font-medium text-blue-800 mb-3">{selectedRate.description}</p>
+            <p className="text-[10px] font-bold text-slate-600 uppercase tracking-tight mb-4 leading-relaxed">{selectedRate.description}</p>
             
-            <div className="grid grid-cols-3 gap-2">
-               <div className="bg-white/50 p-2 rounded-lg">
-                  <p className="text-[8px] font-bold text-blue-400 uppercase tracking-tighter">HCI Amount</p>
-                  <p className="text-xs font-black text-blue-900">₱{Number(selectedRate.hciAmount).toLocaleString()}</p>
+            <div className="grid grid-cols-3 gap-0 border border-slate-100 divide-x divide-slate-100 rounded-sm overflow-hidden">
+               <div className="bg-slate-50/50 p-3 text-center">
+                  <p className="text-[7px] font-black text-slate-400 uppercase tracking-widest mb-1">HCI Cap</p>
+                  <p className="text-[10px] font-black text-[#0f172a] tracking-tighter">₱{Number(selectedRate.hciAmount).toLocaleString()}</p>
                </div>
-               <div className="bg-white/50 p-2 rounded-lg">
-                  <p className="text-[8px] font-bold text-blue-400 uppercase tracking-tighter">HCP Amount</p>
-                  <p className="text-xs font-black text-blue-900">₱{Number(selectedRate.hcpAmount).toLocaleString()}</p>
+               <div className="bg-slate-50/50 p-3 text-center">
+                  <p className="text-[7px] font-black text-slate-400 uppercase tracking-widest mb-1">HCP Cap</p>
+                  <p className="text-[10px] font-black text-[#0f172a] tracking-tighter">₱{Number(selectedRate.hcpAmount).toLocaleString()}</p>
                </div>
-               <div className="bg-white/50 p-2 rounded-lg border border-blue-200">
-                  <p className="text-[8px] font-bold text-blue-400 uppercase tracking-tighter">Total Benefit</p>
-                  <p className="text-xs font-black text-blue-600">₱{Number(selectedRate.totalAmount).toLocaleString()}</p>
+               <div className="bg-[#0f172a] p-3 text-center">
+                  <p className="text-[7px] font-black text-slate-400 uppercase tracking-widest mb-1">Institutional Benefit</p>
+                  <p className="text-[10px] font-black text-white tracking-tighter">₱{Number(selectedRate.totalAmount).toLocaleString()}</p>
                </div>
             </div>
           </div>
           <Button 
             variant="ghost" 
             size="sm" 
-            className="text-blue-400 hover:text-blue-600"
+            className="h-7 px-3 rounded-[1px] border border-slate-200 text-slate-400 hover:text-[#0f172a] text-[8px] font-black uppercase tracking-widest"
             onClick={() => setSelectedRate(null)}
           >
-            Change
+            Modify
           </Button>
         </div>
       )}
       
       {!selectedRate && !query && (
-        <div className="flex items-center gap-2 text-slate-400 text-xs italic p-2">
+        <div className="flex items-center gap-2 text-slate-400 text-[9px] font-bold uppercase tracking-widest p-2">
            <Info className="h-3 w-3" />
-           PhilHealth benefits are calculated based on the primary diagnosis code.
+           Benefit computation is dependent on official ICD-10/RVS categorization.
         </div>
       )}
     </div>

@@ -69,110 +69,110 @@ export default function ReportsPage() {
     fetchReports();
   }, [year]);
 
-  if (loading && !data) return <div className="p-20 text-center animate-pulse">Aggregating Statistical Data...</div>;
+  if (loading && !data) return <div className="p-20 text-center animate-pulse uppercase text-[9px] font-black tracking-[0.2em] text-slate-400">Aggregating Institutional Statistics...</div>;
 
   return (
-    <div className="max-w-[1400px] mx-auto space-y-8 pb-20">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="space-y-1">
+    <div className="max-w-full space-y-8 pb-20">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-slate-200 pb-8">
+        <div className="space-y-4">
           <Link 
             href="/" 
-            className="inline-flex items-center text-sm font-bold text-slate-400 hover:text-blue-600 transition-colors mb-2"
+            className="inline-flex items-center text-[10px] font-black text-slate-400 hover:text-[#0f172a] transition-colors uppercase tracking-[0.2em]"
           >
-            <ArrowLeft className="h-4 w-4 mr-1" />
-            Back to Dashboard
+            <ArrowLeft className="h-3 w-3 mr-2" />
+            Registry Return
           </Link>
-          <h1 className="text-3xl font-bold text-slate-900 tracking-tight flex items-center gap-3">
-             <BarChart3 className="h-8 w-8 text-blue-600" />
-             DOH Statistical Reporting
+          <h1 className="text-2xl font-black text-[#0f172a] uppercase tracking-tight leading-none">
+             DOH Statistical Analytics
           </h1>
-          <p className="text-slate-500 font-medium">Annual Hospital Statistical Report (AHSR) compliance module.</p>
+          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Annual Hospital Statistical Report (AHSR) Compliance</p>
         </div>
 
-        <div className="flex items-center gap-3">
-           <div className="bg-white p-1 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-2 px-3">
-              <Calendar className="h-4 w-4 text-slate-400" />
+        <div className="flex items-center gap-2">
+           <div className="bg-white p-1 rounded-sm border border-slate-200 flex items-center gap-2 px-3 h-9">
+              <Calendar className="h-3.5 w-3.5 text-slate-400" />
               <Select value={year} onValueChange={setYear}>
-                 <SelectTrigger className="border-none shadow-none h-10 w-32 focus:ring-0 font-bold">
+                 <SelectTrigger className="border-none shadow-none h-7 w-28 focus:ring-0 text-[10px] font-black uppercase tracking-widest bg-transparent">
                     <SelectValue />
                  </SelectTrigger>
-                 <SelectContent className="rounded-xl">
-                    <SelectItem value="2024">CY 2024</SelectItem>
-                    <SelectItem value="2025">CY 2025</SelectItem>
-                    <SelectItem value="2026">CY 2026</SelectItem>
+                 <SelectContent className="rounded-sm border-slate-200 shadow-xl">
+                    <SelectItem value="2024" className="text-[10px] font-bold uppercase">CY 2024</SelectItem>
+                    <SelectItem value="2025" className="text-[10px] font-bold uppercase">CY 2025</SelectItem>
+                    <SelectItem value="2026" className="text-[10px] font-bold uppercase">CY 2026</SelectItem>
                  </SelectContent>
               </Select>
            </div>
-           <Button variant="outline" className="rounded-2xl border-slate-200 font-bold h-12 px-6">
-              <Download className="h-4 w-4 mr-2" />
+           <Button variant="outline" className="h-9 px-6 rounded-sm border-slate-300 text-[9px] font-black uppercase tracking-widest">
+              <Download className="h-3.5 w-3.5 mr-2" />
               Export XML
            </Button>
-           <Button className="bg-blue-600 hover:bg-blue-700 text-white rounded-2xl shadow-lg shadow-blue-100 font-bold h-12 px-8">
-              <FileSpreadsheet className="h-4 w-4 mr-2" />
+           <Button className="bg-[#0f172a] text-white h-9 px-8 rounded-sm text-[9px] font-black uppercase tracking-widest shadow-sm">
+              <FileSpreadsheet className="h-3.5 w-3.5 mr-2" />
               Generate AHSR
            </Button>
         </div>
       </div>
 
-      {/* Main Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      {/* Main Stats Grid - Institutional Minimal */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-0 border border-slate-200 divide-x divide-slate-200 bg-white">
          {[
-           { label: "Total Admissions", value: data?.volume.admissions, icon: Users, color: "text-blue-600", bg: "bg-blue-50" },
-           { label: "Bed Occupancy Rate", value: `${data?.hospitalInfo.occupancyRate}%`, icon: BedDouble, color: "text-purple-600", bg: "bg-purple-50" },
-           { label: "Avg Length of Stay", value: `${data?.hospitalInfo.alos} Days`, icon: Activity, color: "text-emerald-600", bg: "bg-emerald-50" },
-           { label: "Total Mortality", value: data?.volume.deaths, icon: AlertTriangle, color: "text-red-600", bg: "bg-red-50" },
+           { label: "Total Admissions", value: data?.volume.admissions, icon: Users, color: "text-[#0f172a]" },
+           { label: "Bed Occupancy", value: `${data?.hospitalInfo.occupancyRate}%`, icon: BedDouble, color: "text-[#0f172a]" },
+           { label: "Mean Stay (Days)", value: data?.hospitalInfo.alos, icon: Activity, color: "text-[#0f172a]" },
+           { label: "Mortality Registry", value: data?.volume.deaths, icon: AlertTriangle, color: "text-[#991b1b]" },
          ].map((stat, i) => (
-           <Card key={i} className="border-none shadow-sm rounded-[2rem] overflow-hidden">
-             <CardContent className="p-8">
-                <div className={cn("h-12 w-12 rounded-2xl flex items-center justify-center mb-6", stat.bg, stat.color)}>
-                   <stat.icon className="h-6 w-6" />
-                </div>
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{stat.label}</p>
-                <span className="text-3xl font-black text-slate-900 tracking-tighter">{stat.value}</span>
-             </CardContent>
-           </Card>
+           <div key={i} className="p-6">
+              <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">{stat.label}</p>
+              <div className="flex items-end justify-between">
+                <span className={cn("text-3xl font-black tracking-tighter leading-none", stat.color)}>{stat.value}</span>
+                <stat.icon className="h-4 w-4 text-slate-200" />
+              </div>
+           </div>
          ))}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
          {/* Top Causes of Morbidity */}
          <div className="lg:col-span-2">
-            <Card className="border-none shadow-sm rounded-[2rem] overflow-hidden">
-               <CardHeader className="bg-slate-50 border-b border-slate-100 px-8 py-6">
-                  <CardTitle className="text-lg font-bold">Top 10 Causes of Morbidity</CardTitle>
-                  <CardDescription>Based on primary ICD-10 clinical coding for the selected period.</CardDescription>
-               </CardHeader>
+            <Card className="border-slate-200 rounded-sm overflow-hidden bg-white shadow-sm">
+               <div className="px-8 py-5 bg-slate-50 border-b border-slate-200">
+                  <h2 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">Institutional Morbidity Analysis</h2>
+                  <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">Based on validated ICD-10 clinical coding records.</p>
+               </div>
                <CardContent className="p-0">
                   <div className="overflow-x-auto">
-                     <table className="w-full text-left">
+                     <table className="w-full text-left border-collapse">
                         <thead>
-                           <tr className="border-b border-slate-50">
-                              <th className="px-8 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest w-20">Rank</th>
-                              <th className="px-8 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest w-24">ICD-10</th>
-                              <th className="px-8 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Diagnosis Description</th>
-                              <th className="px-8 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-right">Cases</th>
+                           <tr className="bg-white border-b border-slate-100">
+                              <th className="px-8 py-4 text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] w-20 border-r border-slate-50 text-center">Rank</th>
+                              <th className="px-8 py-4 text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] w-28 border-r border-slate-50">ICD-10 Code</th>
+                              <th className="px-8 py-4 text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] border-r border-slate-50">Clinical Identification</th>
+                              <th className="px-8 py-4 text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] text-right">Case Vol.</th>
                            </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-50">
                            {data?.morbidity.map((item, i) => (
-                             <tr key={i} className="hover:bg-slate-50/50 transition-colors">
-                                <td className="px-8 py-5">
-                                   <span className="h-6 w-6 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-black text-slate-500">
-                                      {i + 1}
+                             <tr key={i} className="hover:bg-[#fcfcfc] transition-colors">
+                                <td className="px-8 py-4 border-r border-slate-50 text-center">
+                                   <span className="text-[10px] font-black text-slate-300">
+                                      {String(i + 1).padStart(2, '0')}
                                    </span>
                                 </td>
-                                <td className="px-8 py-5 font-mono text-xs font-bold text-blue-600">{item.code}</td>
-                                <td className="px-8 py-5 font-bold text-slate-700">{item.description}</td>
-                                <td className="px-8 py-5 text-right font-black text-slate-900">{item.count}</td>
+                                <td className="px-8 py-4 border-r border-slate-50">
+                                   <span className="text-[10px] font-black text-[#0f172a] bg-slate-50 px-2 py-0.5 rounded-[1px] border border-slate-100 uppercase">{item.code}</span>
+                                </td>
+                                <td className="px-8 py-4 border-r border-slate-50">
+                                   <span className="text-[10px] font-black text-slate-600 uppercase tracking-tight">{item.description}</span>
+                                </td>
+                                <td className="px-8 py-4 text-right">
+                                   <span className="text-[11px] font-black text-[#0f172a] tracking-tighter">{item.count}</span>
+                                </td>
                              </tr>
                            ))}
                            {data?.morbidity.length === 0 && (
                              <tr>
-                                <td colSpan={4} className="py-20 text-center">
-                                   <div className="max-w-xs mx-auto opacity-20">
-                                      <Activity className="h-12 w-12 mx-auto mb-4" />
-                                      <p className="font-bold text-slate-900 uppercase tracking-widest text-xs">No coded cases found for this period.</p>
-                                   </div>
+                                <td colSpan={4} className="py-24 text-center">
+                                   <p className="text-[9px] font-black text-slate-300 uppercase tracking-[0.3em]">No validated diagnostic data found for selected period.</p>
                                 </td>
                              </tr>
                            )}
@@ -185,64 +185,64 @@ export default function ReportsPage() {
 
          {/* Efficiency & Capacity */}
          <div className="space-y-6">
-            <Card className="border-none shadow-sm rounded-[2rem] overflow-hidden bg-slate-900 text-white">
-               <CardHeader className="border-b border-white/10 px-8 py-6">
-                  <CardTitle className="text-lg font-bold">Facility Capacity</CardTitle>
-               </CardHeader>
+            <Card className="border-slate-900 bg-[#0f172a] text-white rounded-sm overflow-hidden shadow-xl">
+               <div className="px-8 py-5 border-b border-white/10">
+                  <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Operational Capacity Index</h2>
+               </div>
                <CardContent className="p-8 space-y-8">
-                  <div className="space-y-4">
+                  <div className="space-y-3">
                      <div className="flex justify-between items-end">
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Implemented Beds</p>
-                        <span className="text-2xl font-black">{data?.hospitalInfo.totalBeds}</span>
+                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Licensed Bed Units</p>
+                        <span className="text-3xl font-black tracking-tighter">{data?.hospitalInfo.totalBeds}</span>
                      </div>
-                     <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+                     <div className="h-1.5 bg-white/10 rounded-[1px] overflow-hidden">
                         <div 
-                          className="h-full bg-blue-500 rounded-full" 
+                          className="h-full bg-white transition-all duration-1000" 
                           style={{ width: `${Math.min(data?.hospitalInfo.occupancyRate || 0, 100)}%` }} 
                         />
                      </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-8 pt-4">
-                     <div className="space-y-1">
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Discharges</p>
-                        <p className="text-xl font-black text-emerald-400">{data?.volume.discharges}</p>
+                  <div className="grid grid-cols-2 gap-0 border-t border-white/10 -mx-8">
+                     <div className="p-6 border-r border-white/10">
+                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Registry Discharges</p>
+                        <p className="text-2xl font-black tracking-tighter text-white">{data?.volume.discharges}</p>
                      </div>
-                     <div className="space-y-1">
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Patient Days</p>
-                        <p className="text-xl font-black text-purple-400">{data?.hospitalInfo.totalPatientDays}</p>
+                     <div className="p-6">
+                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Patient Accrual Days</p>
+                        <p className="text-2xl font-black tracking-tighter text-white">{data?.hospitalInfo.totalPatientDays}</p>
                      </div>
                   </div>
 
-                  <div className="bg-white/5 p-6 rounded-3xl space-y-4">
+                  <div className="bg-white border border-white/10 p-5 rounded-sm space-y-5">
                      <div className="flex items-center gap-3">
-                        <div className="h-8 w-8 rounded-xl bg-blue-500/20 text-blue-400 flex items-center justify-center">
-                           <RefreshCw className={cn("h-4 w-4", loading && "animate-spin")} />
+                        <div className="h-7 w-7 rounded-[1px] bg-slate-50 flex items-center justify-center border border-slate-100">
+                           <RefreshCw className={cn("h-3.5 w-3.5 text-[#0f172a]", loading && "animate-spin")} />
                         </div>
-                        <p className="text-xs font-bold text-slate-300">Live Efficiency Index</p>
+                        <p className="text-[9px] font-black text-[#0f172a] uppercase tracking-widest">Efficiency Parameters</p>
                      </div>
-                     <div className="space-y-2">
-                        <div className="flex justify-between text-xs">
-                           <span className="text-slate-500 font-medium">Turnover Rate</span>
-                           <span className="font-bold">1.4x</span>
+                     <div className="space-y-3">
+                        <div className="flex justify-between text-[9px] font-black uppercase border-b border-slate-50 pb-2">
+                           <span className="text-slate-400 tracking-wider">Bed Turnover</span>
+                           <span className="text-[#0f172a]">1.4x Index</span>
                         </div>
-                        <div className="flex justify-between text-xs">
-                           <span className="text-slate-500 font-medium">Death Rate</span>
-                           <span className="font-bold">{data?.volume.admissions ? ((data?.volume.deaths / data?.volume.admissions) * 100).toFixed(1) : 0}%</span>
+                        <div className="flex justify-between text-[9px] font-black uppercase">
+                           <span className="text-slate-400 tracking-wider">Gross Fatality</span>
+                           <span className="text-[#0f172a]">{data?.volume.admissions ? ((data?.volume.deaths / data?.volume.admissions) * 100).toFixed(1) : 0}%</span>
                         </div>
                      </div>
                   </div>
                </CardContent>
             </Card>
 
-            <div className="p-8 bg-blue-50 border border-blue-100 rounded-[2rem] space-y-4">
-               <ShieldCheck className="h-8 w-8 text-blue-600" />
-               <h4 className="text-sm font-bold text-blue-900 uppercase tracking-tight">DOH Licensing Readiness</h4>
-               <p className="text-xs text-blue-600 leading-relaxed font-medium">
-                  This report follows the DOH-KMITS technical standards for electronic health records submission. Ensure all admissions have primary ICD-10 coding for 100% accuracy.
+            <div className="p-8 bg-slate-50 border border-slate-200 rounded-sm space-y-4">
+               <ShieldCheck className="h-6 w-6 text-[#0f172a]" />
+               <h4 className="text-[10px] font-black text-[#0f172a] uppercase tracking-[0.1em]">KMITS Compliance Notice</h4>
+               <p className="text-[10px] text-slate-500 leading-relaxed font-bold uppercase tracking-tight">
+                  Validated for DOH-KMITS technical standards. All records must feature primary ICD-10 categorization before institutional submission.
                </p>
-               <Button variant="link" className="p-0 h-auto text-blue-700 font-bold text-xs uppercase tracking-widest">
-                  View Submission Guide
+               <Button variant="link" className="p-0 h-auto text-[#0f172a] font-black text-[9px] uppercase tracking-widest underline underline-offset-4 decoration-1">
+                  Institutional Protocols
                </Button>
             </div>
          </div>

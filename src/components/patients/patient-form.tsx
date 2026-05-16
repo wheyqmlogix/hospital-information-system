@@ -99,66 +99,68 @@ export function PatientForm() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto pb-20">
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+    <div className="max-w-5xl mx-auto pb-12">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         {error && (
-          <div className="p-4 bg-red-50 border border-red-100 rounded-2xl flex items-center gap-3 text-red-600 text-sm font-medium animate-in fade-in duration-300">
-            <AlertCircle className="h-5 w-5 shrink-0" />
-            {error}
+          <div className="p-3 bg-red-50 border border-red-200 rounded-sm flex items-center gap-3 text-red-600 text-[10px] font-black uppercase tracking-widest">
+            <AlertCircle className="h-4 w-4 shrink-0" />
+            Error: {error}
           </div>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Main Form Area */}
-          <div className="lg:col-span-2 space-y-8">
+          <div className="lg:col-span-3 space-y-6">
             
             {/* Section 1: Demographics */}
-            <Card className="border-none shadow-sm rounded-2xl overflow-hidden bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800">
-              <div className="px-6 py-4 bg-slate-50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800 flex items-center gap-3">
-                 <User className="h-5 w-5 text-blue-600" />
-                 <h2 className="font-bold text-slate-900 dark:text-white">Patient Demographics</h2>
+            <Card className="border-slate-200 shadow-sm rounded-md overflow-hidden bg-white">
+              <div className="px-5 py-3 bg-slate-50 border-b border-slate-200 flex items-center gap-2.5">
+                 <div className="h-6 w-6 bg-clinical-primary/10 rounded-sm flex items-center justify-center">
+                    <User className="h-3.5 w-3.5 text-clinical-primary" />
+                 </div>
+                 <h2 className="text-[11px] font-black text-slate-900 uppercase tracking-widest">Patient Demographics</h2>
               </div>
-              <CardContent className="p-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <CardContent className="p-5">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-x-4 gap-y-5">
                   <div className="space-y-1.5">
                     <Label htmlFor="firstName" className="text-[10px] font-black uppercase tracking-widest text-slate-400">First Name</Label>
-                    <Input id="firstName" {...form.register("firstName")} className="h-10 rounded-lg" />
+                    <Input id="firstName" {...form.register("firstName")} className="h-9 rounded-sm bg-slate-50 focus:bg-white text-xs font-bold" />
                     {form.formState.errors.firstName && (
-                      <p className="text-[10px] text-red-500 font-bold">{form.formState.errors.firstName.message}</p>
+                      <p className="text-[9px] text-red-500 font-bold uppercase mt-1">{form.formState.errors.firstName.message}</p>
                     )}
                   </div>
                   <div className="space-y-1.5">
                     <Label htmlFor="lastName" className="text-[10px] font-black uppercase tracking-widest text-slate-400">Last Name</Label>
-                    <Input id="lastName" {...form.register("lastName")} className="h-10 rounded-lg" />
+                    <Input id="lastName" {...form.register("lastName")} className="h-9 rounded-sm bg-slate-50 focus:bg-white text-xs font-bold" />
                     {form.formState.errors.lastName && (
-                      <p className="text-[10px] text-red-500 font-bold">{form.formState.errors.lastName.message}</p>
+                      <p className="text-[9px] text-red-500 font-bold uppercase mt-1">{form.formState.errors.lastName.message}</p>
                     )}
                   </div>
                   <div className="space-y-1.5">
                     <Label htmlFor="middleName" className="text-[10px] font-black uppercase tracking-widest text-slate-400">Middle Name</Label>
-                    <Input id="middleName" {...form.register("middleName")} className="h-10 rounded-lg" />
+                    <Input id="middleName" {...form.register("middleName")} className="h-9 rounded-sm bg-slate-50 focus:bg-white text-xs font-bold" />
                   </div>
                   <div className="space-y-1.5">
                     <Label htmlFor="extensionName" className="text-[10px] font-black uppercase tracking-widest text-slate-400">Extension</Label>
-                    <Input id="extensionName" {...form.register("extensionName")} className="h-10 rounded-lg" placeholder="Jr, III, etc." />
+                    <Input id="extensionName" {...form.register("extensionName")} className="h-9 rounded-sm bg-slate-50 focus:bg-white text-xs font-bold" placeholder="Jr, III, etc." />
                   </div>
                   <div className="space-y-1.5">
                     <Label htmlFor="dateOfBirth" className="text-[10px] font-black uppercase tracking-widest text-slate-400">Date of Birth</Label>
-                    <Input id="dateOfBirth" type="date" {...form.register("dateOfBirth")} className="h-10 rounded-lg" />
+                    <Input id="dateOfBirth" type="date" {...form.register("dateOfBirth")} className="h-9 rounded-sm bg-slate-50 focus:bg-white text-xs font-bold uppercase" />
                     {form.formState.errors.dateOfBirth && (
-                      <p className="text-[10px] text-red-500 font-bold">{form.formState.errors.dateOfBirth.message}</p>
+                      <p className="text-[9px] text-red-500 font-bold uppercase mt-1">{form.formState.errors.dateOfBirth.message}</p>
                     )}
                   </div>
                   <div className="space-y-1.5">
                     <Label htmlFor="gender" className="text-[10px] font-black uppercase tracking-widest text-slate-400">Gender</Label>
                     <Select onValueChange={(val) => form.setValue("gender", val as "MALE" | "FEMALE" | "OTHER")} defaultValue={form.getValues("gender")}>
-                      <SelectTrigger className="h-10 rounded-lg">
+                      <SelectTrigger className="h-9 rounded-sm bg-slate-50 focus:bg-white text-xs font-bold">
                         <SelectValue placeholder="Select" />
                       </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="MALE">Male</SelectItem>
-                        <SelectItem value="FEMALE">Female</SelectItem>
-                        <SelectItem value="OTHER">Other</SelectItem>
+                      <SelectContent className="rounded-sm shadow-lg border-slate-200">
+                        <SelectItem value="MALE" className="text-xs font-bold uppercase">Male</SelectItem>
+                        <SelectItem value="FEMALE" className="text-xs font-bold uppercase">Female</SelectItem>
+                        <SelectItem value="OTHER" className="text-xs font-bold uppercase">Other</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -167,37 +169,39 @@ export function PatientForm() {
             </Card>
 
             {/* Section 2: Address */}
-            <Card className="border-none shadow-sm rounded-2xl overflow-hidden bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800">
-              <div className="px-6 py-4 bg-slate-50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800 flex items-center gap-3">
-                 <MapPin className="h-5 w-5 text-emerald-600" />
-                 <h2 className="font-bold text-slate-900 dark:text-white">Residential Address</h2>
+            <Card className="border-slate-200 shadow-sm rounded-md overflow-hidden bg-white">
+              <div className="px-5 py-3 bg-slate-50 border-b border-slate-200 flex items-center gap-2.5">
+                 <div className="h-6 w-6 bg-clinical-primary/10 rounded-sm flex items-center justify-center">
+                    <MapPin className="h-3.5 w-3.5 text-clinical-primary" />
+                 </div>
+                 <h2 className="text-[11px] font-black text-slate-900 uppercase tracking-widest">Residential Address</h2>
               </div>
-              <CardContent className="p-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <CardContent className="p-5">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                   <div className="space-y-1.5">
                     <Label htmlFor="province" className="text-[10px] font-black uppercase tracking-widest text-slate-400">Province</Label>
-                    <Input id="province" {...form.register("province")} className="h-10 rounded-lg" />
+                    <Input id="province" {...form.register("province")} className="h-9 rounded-sm bg-slate-50 focus:bg-white text-xs font-bold" />
                     {form.formState.errors.province && (
-                      <p className="text-[10px] text-red-500 font-bold">{form.formState.errors.province.message}</p>
+                      <p className="text-[9px] text-red-500 font-bold uppercase mt-1">{form.formState.errors.province.message}</p>
                     )}
                   </div>
                   <div className="space-y-1.5">
                     <Label htmlFor="city" className="text-[10px] font-black uppercase tracking-widest text-slate-400">City / Municipality</Label>
-                    <Input id="city" {...form.register("city")} className="h-10 rounded-lg" />
+                    <Input id="city" {...form.register("city")} className="h-9 rounded-sm bg-slate-50 focus:bg-white text-xs font-bold" />
                     {form.formState.errors.city && (
-                      <p className="text-[10px] text-red-500 font-bold">{form.formState.errors.city.message}</p>
+                      <p className="text-[9px] text-red-500 font-bold uppercase mt-1">{form.formState.errors.city.message}</p>
                     )}
                   </div>
                   <div className="space-y-1.5">
                     <Label htmlFor="barangay" className="text-[10px] font-black uppercase tracking-widest text-slate-400">Barangay</Label>
-                    <Input id="barangay" {...form.register("barangay")} className="h-10 rounded-lg" />
+                    <Input id="barangay" {...form.register("barangay")} className="h-9 rounded-sm bg-slate-50 focus:bg-white text-xs font-bold" />
                     {form.formState.errors.barangay && (
-                      <p className="text-[10px] text-red-500 font-bold">{form.formState.errors.barangay.message}</p>
+                      <p className="text-[9px] text-red-500 font-bold uppercase mt-1">{form.formState.errors.barangay.message}</p>
                     )}
                   </div>
                   <div className="space-y-1.5">
                     <Label htmlFor="zipCode" className="text-[10px] font-black uppercase tracking-widest text-slate-400">Zip Code</Label>
-                    <Input id="zipCode" {...form.register("zipCode")} className="h-10 rounded-lg" />
+                    <Input id="zipCode" {...form.register("zipCode")} className="h-9 rounded-sm bg-slate-50 focus:bg-white text-xs font-bold" />
                   </div>
                 </div>
               </CardContent>
@@ -205,87 +209,83 @@ export function PatientForm() {
           </div>
 
           {/* Sidebar Area: Identifiers & Consent */}
-          <div className="space-y-8">
+          <div className="space-y-6">
             {/* Section 3: Identifiers */}
-            <Card className="border-none shadow-sm rounded-2xl overflow-hidden bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800">
-              <div className="px-6 py-4 bg-slate-50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800 flex items-center gap-3">
-                 <Fingerprint className="h-5 w-5 text-amber-600" />
-                 <h2 className="font-bold text-slate-900 dark:text-white">Identifiers</h2>
+            <Card className="border-slate-200 shadow-sm rounded-md overflow-hidden bg-white">
+              <div className="px-5 py-3 bg-slate-50 border-b border-slate-200 flex items-center gap-2.5">
+                 <div className="h-6 w-6 bg-clinical-primary/10 rounded-sm flex items-center justify-center">
+                    <Fingerprint className="h-3.5 w-3.5 text-clinical-primary" />
+                 </div>
+                 <h2 className="text-[11px] font-black text-slate-900 uppercase tracking-widest">Identifiers</h2>
               </div>
-              <CardContent className="p-6 space-y-4">
+              <CardContent className="p-5 space-y-4">
                 <div className="space-y-1.5">
                   <Label htmlFor="philHealthPIN" className="text-[10px] font-black uppercase tracking-widest text-slate-400">PhilHealth PIN</Label>
-                  <Input id="philHealthPIN" placeholder="XX-XXXXXXXXX-X" {...form.register("philHealthPIN")} className="h-10 rounded-lg" />
+                  <Input id="philHealthPIN" placeholder="XX-XXXXXXXXX-X" {...form.register("philHealthPIN")} className="h-9 rounded-sm bg-slate-50 focus:bg-white text-xs font-bold" />
                   {form.formState.errors.philHealthPIN && (
-                    <p className="text-[10px] text-red-500 font-bold">{form.formState.errors.philHealthPIN.message}</p>
+                    <p className="text-[9px] text-red-500 font-bold uppercase mt-1">{form.formState.errors.philHealthPIN.message}</p>
                   )}
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="nationalId" className="text-[10px] font-black uppercase tracking-widest text-slate-400">National ID</Label>
-                  <Input id="nationalId" {...form.register("nationalId")} className="h-10 rounded-lg" />
+                  <Input id="nationalId" {...form.register("nationalId")} className="h-9 rounded-sm bg-slate-50 focus:bg-white text-xs font-bold" />
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="seniorId" className="text-[10px] font-black uppercase tracking-widest text-slate-400">Senior ID</Label>
-                  <Input id="seniorId" {...form.register("seniorId")} className="h-10 rounded-lg" />
+                  <Input id="seniorId" {...form.register("seniorId")} className="h-9 rounded-sm bg-slate-50 focus:bg-white text-xs font-bold" />
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="pwdId" className="text-[10px] font-black uppercase tracking-widest text-slate-400">PWD ID</Label>
-                  <Input id="pwdId" {...form.register("pwdId")} className="h-10 rounded-lg" />
+                  <Input id="pwdId" {...form.register("pwdId")} className="h-9 rounded-sm bg-slate-50 focus:bg-white text-xs font-bold" />
                 </div>
               </CardContent>
             </Card>
 
             {/* Section 4: Consent & Save */}
-            <Card className="border-none shadow-sm rounded-2xl overflow-hidden bg-blue-600 text-white">
-              <CardContent className="p-6 space-y-6">
-                <div className="space-y-2">
-                   <div className="flex items-center gap-2 mb-2">
-                      <ShieldCheck className="h-5 w-5" />
-                      <h3 className="font-bold">Data Consent</h3>
-                   </div>
-                   <p className="text-[11px] leading-relaxed opacity-90">
-                     Confirm patient consent for processing medical data under RA 10173.
-                   </p>
-                </div>
-                
-                <div className="flex items-start space-x-3 bg-white/10 p-3 rounded-xl border border-white/20">
-                  <Checkbox 
-                    id="dpaConsent" 
-                    className="mt-1 border-white data-[state=checked]:bg-white data-[state=checked]:text-blue-600"
-                    onCheckedChange={(checked) => form.setValue("dpaConsent", checked === true)}
-                    checked={form.watch("dpaConsent")}
-                  />
-                  <Label htmlFor="dpaConsent" className="text-[11px] font-bold cursor-pointer leading-tight">
-                    Informed consent obtained.
-                  </Label>
-                </div>
-                {form.formState.errors.dpaConsent && (
-                  <p className="text-[10px] font-black uppercase tracking-widest text-amber-300 animate-pulse">Consent required</p>
-                )}
-
-                <Button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="w-full bg-white text-blue-600 hover:bg-blue-50 h-12 rounded-xl font-black uppercase tracking-widest text-xs shadow-lg shadow-blue-900/20"
-                >
-                  {isSubmitting ? "Saving..." : (
-                    <span className="flex items-center gap-2">
-                      <Save className="h-4 w-4" />
-                      Register Patient
-                    </span>
+            <div className="space-y-4">
+               <div className="p-4 bg-white border border-clinical-primary/20 rounded-md shadow-sm space-y-4">
+                  <div className="flex items-center gap-2">
+                      <ShieldCheck className="h-4 w-4 text-clinical-primary" />
+                      <h3 className="text-[10px] font-black text-slate-900 uppercase tracking-widest">RA 10173 Compliance</h3>
+                  </div>
+                  <div className="flex items-start space-x-3 bg-slate-50 p-3 rounded-sm border border-slate-100">
+                    <Checkbox 
+                      id="dpaConsent" 
+                      className="mt-0.5 border-slate-300 data-[state=checked]:bg-clinical-primary data-[state=checked]:border-clinical-primary"
+                      onCheckedChange={(checked) => form.setValue("dpaConsent", checked === true)}
+                      checked={form.watch("dpaConsent")}
+                    />
+                    <Label htmlFor="dpaConsent" className="text-[10px] font-bold cursor-pointer leading-tight text-slate-600 uppercase tracking-tight">
+                      I confirm patient consent has been formally obtained.
+                    </Label>
+                  </div>
+                  {form.formState.errors.dpaConsent && (
+                    <p className="text-[9px] font-black uppercase tracking-widest text-red-500 animate-pulse">Action Required: Consent Mandatory</p>
                   )}
-                </Button>
-              </CardContent>
-            </Card>
 
-            <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800">
-               <div className="flex items-center gap-2 text-slate-400 mb-2">
-                  <Info className="h-4 w-4" />
-                  <span className="text-[10px] font-black uppercase tracking-widest">Efficiency Tip</span>
+                  <Button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="w-full bg-clinical-primary text-white hover:bg-clinical-primary-dark h-10 rounded-sm font-black uppercase tracking-widest text-[10px] shadow-sm transition-all"
+                  >
+                    {isSubmitting ? "Processing..." : (
+                      <span className="flex items-center gap-2">
+                        <Save className="h-3.5 w-3.5" />
+                        Complete Registration
+                      </span>
+                    )}
+                  </Button>
                </div>
-               <p className="text-[11px] text-slate-500 leading-relaxed font-medium">
-                  Fields with labels are mandatory. Pressing <kbd className="bg-white dark:bg-slate-800 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700 shadow-sm font-mono">Enter</kbd> will submit the form if all required fields are filled.
-               </p>
+
+               <div className="p-4 bg-slate-50 rounded-md border border-slate-200">
+                  <div className="flex items-center gap-2 text-slate-400 mb-2">
+                     <Info className="h-3.5 w-3.5" />
+                     <span className="text-[9px] font-black uppercase tracking-widest">System Protocol</span>
+                  </div>
+                  <p className="text-[10px] text-slate-500 leading-relaxed font-bold uppercase tracking-tighter">
+                     All demographics must be validated against official government ID before final submission.
+                  </p>
+               </div>
             </div>
           </div>
         </div>

@@ -159,13 +159,13 @@ export default function PharmacyInventoryPage() {
       {/* Add Medication Modal Overlay */}
       {isAdding && (
         <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-           <Card className="w-full max-w-2xl border-none shadow-2xl rounded-[2rem] overflow-hidden animate-in zoom-in-95 duration-200">
+           <Card className="w-full max-w-2xl border border-slate-200 rounded-sm overflow-hidden animate-in zoom-in-95 duration-200">
               <CardHeader className="bg-slate-50 border-b border-slate-100 px-8 py-6 flex flex-row items-center justify-between">
-                 <CardTitle className="text-xl font-bold flex items-center gap-2">
-                    <Plus className="h-5 w-5 text-blue-600" />
+                 <CardTitle className="text-sm font-black flex items-center gap-2 uppercase tracking-widest text-[#0f172a]">
+                    <Plus className="h-5 w-5 text-[#0f172a]" />
                     New Inventory Item
                  </CardTitle>
-                 <Button variant="ghost" size="icon" onClick={() => setIsAdding(false)} className="rounded-full">
+                 <Button variant="ghost" size="icon" onClick={() => setIsAdding(false)} className="rounded-sm">
                     <X className="h-5 w-5" />
                  </Button>
               </CardHeader>
@@ -177,7 +177,7 @@ export default function PharmacyInventoryPage() {
                           <Input 
                             required 
                             placeholder="e.g. MED-001" 
-                            className="h-12 rounded-xl"
+                            className="h-10 rounded-sm"
                             value={newMed.code}
                             onChange={e => setNewMed({...newMed, code: e.target.value})}
                           />
@@ -187,7 +187,7 @@ export default function PharmacyInventoryPage() {
                           <Input 
                             required 
                             placeholder="e.g. Biogesic" 
-                            className="h-12 rounded-xl"
+                            className="h-10 rounded-sm"
                             value={newMed.name}
                             onChange={e => setNewMed({...newMed, name: e.target.value})}
                           />
@@ -197,7 +197,7 @@ export default function PharmacyInventoryPage() {
                           <Input 
                             required 
                             placeholder="e.g. Paracetamol" 
-                            className="h-12 rounded-xl"
+                            className="h-10 rounded-sm"
                             value={newMed.genericName}
                             onChange={e => setNewMed({...newMed, genericName: e.target.value})}
                           />
@@ -205,7 +205,7 @@ export default function PharmacyInventoryPage() {
                        <div className="space-y-2">
                           <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Formulation</Label>
                           <Select onValueChange={v => setNewMed({...newMed, form: v})} defaultValue={newMed.form}>
-                             <SelectTrigger className="h-12 rounded-xl">
+                             <SelectTrigger className="h-10 rounded-sm">
                                 <SelectValue placeholder="Select form" />
                              </SelectTrigger>
                              <SelectContent>
@@ -222,7 +222,7 @@ export default function PharmacyInventoryPage() {
                           <Input 
                             required 
                             placeholder="e.g. 500" 
-                            className="h-12 rounded-xl"
+                            className="h-10 rounded-sm"
                             value={newMed.strength}
                             onChange={e => setNewMed({...newMed, strength: e.target.value})}
                           />
@@ -232,7 +232,7 @@ export default function PharmacyInventoryPage() {
                           <Input 
                             required 
                             placeholder="e.g. mg" 
-                            className="h-12 rounded-xl"
+                            className="h-10 rounded-sm"
                             value={newMed.unit}
                             onChange={e => setNewMed({...newMed, unit: e.target.value})}
                           />
@@ -244,7 +244,7 @@ export default function PharmacyInventoryPage() {
                             type="number" 
                             step="0.01"
                             placeholder="0.00" 
-                            className="h-12 rounded-xl"
+                            className="h-10 rounded-sm"
                             value={newMed.price}
                             onChange={e => setNewMed({...newMed, price: Number(e.target.value)})}
                           />
@@ -254,17 +254,17 @@ export default function PharmacyInventoryPage() {
                           <Input 
                             required 
                             type="number" 
-                            className="h-12 rounded-xl"
+                            className="h-10 rounded-sm"
                             value={newMed.reorderLevel}
                             onChange={e => setNewMed({...newMed, reorderLevel: Number(e.target.value)})}
                           />
                        </div>
                     </div>
                     <div className="flex gap-4 pt-4">
-                       <Button type="button" variant="ghost" onClick={() => setIsAdding(false)} className="flex-1 h-12 rounded-xl font-bold">
+                       <Button type="button" variant="ghost" onClick={() => setIsAdding(false)} className="flex-1 h-10 rounded-sm font-bold uppercase tracking-widest">
                           Cancel
                        </Button>
-                       <Button type="submit" className="flex-1 h-12 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-lg shadow-blue-100">
+                       <Button type="submit" className="flex-1 h-10 rounded-sm bg-[#0f172a] hover:bg-black text-white font-bold uppercase tracking-widest">
                           Register Medication
                        </Button>
                     </div>
@@ -277,21 +277,21 @@ export default function PharmacyInventoryPage() {
       {/* Restock Modal Overlay */}
       {isRestocking && selectedMedForRestock && (
         <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-           <Card className="w-full max-w-md border-none shadow-2xl rounded-[2rem] overflow-hidden animate-in zoom-in-95 duration-200">
+           <Card className="w-full max-w-md border border-slate-200 rounded-sm overflow-hidden animate-in zoom-in-95 duration-200">
               <CardHeader className="bg-slate-50 border-b border-slate-100 px-8 py-6 flex flex-row items-center justify-between">
-                 <CardTitle className="text-xl font-bold flex items-center gap-2">
-                    <TrendingUp className="h-5 w-5 text-green-600" />
+                 <CardTitle className="text-sm font-black flex items-center gap-2 uppercase tracking-widest text-[#0f172a]">
+                    <TrendingUp className="h-5 w-5 text-[#0f172a]" />
                     Restock Medication
                  </CardTitle>
-                 <Button variant="ghost" size="icon" onClick={() => setIsRestocking(false)} className="rounded-full">
+                 <Button variant="ghost" size="icon" onClick={() => setIsRestocking(false)} className="rounded-sm">
                     <X className="h-5 w-5" />
                  </Button>
               </CardHeader>
               <CardContent className="p-8">
-                 <div className="mb-6 p-4 bg-blue-50 rounded-2xl">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-blue-400 mb-1">Medication</p>
-                    <p className="font-bold text-blue-900">{selectedMedForRestock.name}</p>
-                    <p className="text-[10px] text-blue-600 font-bold uppercase">{selectedMedForRestock.genericName} • {selectedMedForRestock.strength}</p>
+                 <div className="mb-6 p-4 bg-slate-50 border border-slate-100 rounded-sm">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Medication</p>
+                    <p className="font-bold text-[#0f172a] uppercase tracking-tight">{selectedMedForRestock.name}</p>
+                    <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">{selectedMedForRestock.genericName} • {selectedMedForRestock.strength}</p>
                  </div>
                  
                  <form onSubmit={handleRestock} className="space-y-6">
@@ -299,7 +299,7 @@ export default function PharmacyInventoryPage() {
                        <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Batch / Lot Number</Label>
                        <Input 
                          required 
-                         className="h-12 rounded-xl"
+                         className="h-10 rounded-sm"
                          value={restockForm.batchNumber}
                          onChange={e => setRestockForm({...restockForm, batchNumber: e.target.value})}
                        />
@@ -309,7 +309,7 @@ export default function PharmacyInventoryPage() {
                        <Input 
                          required 
                          type="date"
-                         className="h-12 rounded-xl"
+                         className="h-10 rounded-sm"
                          value={restockForm.expiryDate}
                          onChange={e => setRestockForm({...restockForm, expiryDate: e.target.value})}
                        />
@@ -319,16 +319,16 @@ export default function PharmacyInventoryPage() {
                        <Input 
                          required 
                          type="number" 
-                         className="h-12 rounded-xl"
+                         className="h-10 rounded-sm"
                          value={restockForm.quantity}
                          onChange={e => setRestockForm({...restockForm, quantity: Number(e.target.value)})}
                        />
                     </div>
                     <div className="flex gap-4 pt-4">
-                       <Button type="button" variant="ghost" onClick={() => setIsRestocking(false)} className="flex-1 h-12 rounded-xl font-bold">
+                       <Button type="button" variant="ghost" onClick={() => setIsRestocking(false)} className="flex-1 h-10 rounded-sm font-bold uppercase tracking-widest">
                           Cancel
                        </Button>
-                       <Button type="submit" className="flex-1 h-12 rounded-xl bg-green-600 hover:bg-green-700 text-white font-bold shadow-lg shadow-green-100">
+                       <Button type="submit" className="flex-1 h-10 rounded-sm bg-[#0f172a] hover:bg-black text-white font-bold uppercase tracking-widest">
                           Confirm Restock
                        </Button>
                     </div>
@@ -342,20 +342,20 @@ export default function PharmacyInventoryPage() {
         <div className="space-y-1">
           <Link 
             href="/admissions" 
-            className="inline-flex items-center text-sm font-bold text-slate-400 hover:text-blue-600 transition-colors mb-2"
+            className="inline-flex items-center text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 hover:text-[#0f172a] transition-colors mb-2"
           >
-            <ArrowLeft className="h-4 w-4 mr-1" />
+            <ArrowLeft className="h-3 w-3 mr-2" />
             Back to Dashboard
           </Link>
-          <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Pharmacy Command Center</h1>
-          <p className="text-slate-500 font-medium">Manage hospital medication inventory and stock levels.</p>
+          <h1 className="text-3xl font-black text-[#0f172a] tracking-tighter uppercase">Pharmacy Command Center</h1>
+          <p className="text-slate-500 font-bold text-[11px] uppercase tracking-widest">Manage hospital medication inventory and stock levels.</p>
         </div>
 
         <Button 
           onClick={() => setIsAdding(true)}
-          className="bg-blue-600 hover:bg-blue-700 text-white rounded-2xl shadow-lg shadow-blue-100 font-bold px-8 h-12"
+          className="bg-[#0f172a] hover:bg-black text-white rounded-sm font-bold uppercase tracking-widest px-8 h-10"
         >
-          <Plus className="h-5 w-5 mr-2" />
+          <Plus className="h-4 w-4 mr-2" />
           Add Medication
         </Button>
       </div>
@@ -363,18 +363,18 @@ export default function PharmacyInventoryPage() {
       {/* Overview Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         {[
-          { label: "Total Items", value: medications.length, icon: Package, color: "text-blue-600", bg: "bg-blue-50" },
+          { label: "Total Items", value: medications.length, icon: Package, color: "text-[#0f172a]", bg: "bg-slate-50" },
           { label: "Low Stock Alert", value: medications.filter(m => m.stock <= m.reorderLevel).length, icon: AlertCircle, color: "text-red-600", bg: "bg-red-50" },
           { label: "Stock In (24h)", value: "12", icon: TrendingUp, color: "text-green-600", bg: "bg-green-50" },
           { label: "Stock Out (24h)", value: "48", icon: TrendingDown, color: "text-orange-600", bg: "bg-orange-50" },
         ].map((stat, i) => (
-          <Card key={i} className="border-none shadow-sm rounded-[2rem] overflow-hidden">
+          <Card key={i} className="border border-slate-200 rounded-sm overflow-hidden">
             <CardContent className="p-6">
-              <div className={cn("h-10 w-10 rounded-xl flex items-center justify-center mb-4", stat.bg, stat.color)}>
-                  <stat.icon className="h-5 w-5" />
+              <div className={cn("h-8 w-8 rounded-sm flex items-center justify-center mb-4", stat.bg, stat.color)}>
+                  <stat.icon className="h-4 w-4" />
               </div>
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{stat.label}</p>
-              <span className="text-2xl font-black text-slate-900">{stat.value}</span>
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{stat.label}</p>
+              <span className="text-2xl font-black text-[#0f172a]">{stat.value}</span>
             </CardContent>
           </Card>
         ))}
@@ -383,10 +383,10 @@ export default function PharmacyInventoryPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Inventory List */}
         <div className="lg:col-span-2 space-y-6">
-          <Card className="border-none shadow-sm rounded-[2rem] overflow-hidden">
+          <Card className="border border-slate-200 rounded-sm overflow-hidden">
             <CardHeader className="bg-slate-50 border-b border-slate-100 px-8 py-6">
-              <CardTitle className="text-lg font-bold flex items-center gap-2">
-                <Activity className="h-5 w-5 text-blue-600" />
+              <CardTitle className="text-sm font-black flex items-center gap-2 uppercase tracking-widest text-[#0f172a]">
+                <Activity className="h-5 w-5 text-[#0f172a]" />
                 Live Inventory
               </CardTitle>
             </CardHeader>
@@ -394,36 +394,36 @@ export default function PharmacyInventoryPage() {
               <div className="overflow-x-auto">
                 <table className="w-full text-left">
                   <thead>
-                    <tr className="border-b border-slate-50">
-                      <th className="px-8 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Medication</th>
-                      <th className="px-8 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Generic</th>
-                      <th className="px-8 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center">Stock</th>
-                      <th className="px-8 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-right">Price</th>
+                    <tr className="border-b border-slate-100">
+                      <th className="px-8 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Medication</th>
+                      <th className="px-8 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Generic</th>
+                      <th className="px-8 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Stock</th>
+                      <th className="px-8 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Price</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-50">
+                  <tbody className="divide-y divide-slate-100">
                     {medications.map((m) => (
                       <tr key={m.id} className="hover:bg-slate-50/50 transition-colors">
                         <td className="px-8 py-5">
                           <div className="flex flex-col">
-                            <span className="font-bold text-slate-900">{m.name}</span>
-                            <span className="text-[10px] font-bold text-slate-400 uppercase">{m.strength} • {m.form}</span>
+                            <span className="font-bold text-[#0f172a] uppercase tracking-tight text-xs">{m.name}</span>
+                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{m.strength} • {m.form}</span>
                           </div>
                         </td>
                         <td className="px-8 py-5">
-                           <span className="text-xs font-medium text-slate-600">{m.genericName}</span>
+                           <span className="text-[10px] font-bold text-slate-600 uppercase tracking-wide">{m.genericName}</span>
                         </td>
                         <td className="px-8 py-5 text-center">
                            <span className={cn(
-                             "inline-flex items-center px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest",
-                             m.stock <= m.reorderLevel ? "bg-red-100 text-red-600" : "bg-green-100 text-green-600"
+                             "inline-flex items-center px-2 py-0.5 rounded-[1px] text-[9px] font-black uppercase tracking-widest border",
+                             m.stock <= m.reorderLevel ? "bg-red-50 text-red-600 border-red-100" : "bg-green-50 text-green-600 border-green-100"
                            )}>
                               {m.stock} {m.unit}
                            </span>
                         </td>
                         <td className="px-8 py-5 text-right">
                            <div className="flex items-center justify-end gap-3">
-                              <span className="font-black text-slate-900 mr-4">₱{Number(m.price).toLocaleString()}</span>
+                              <span className="font-black text-[#0f172a] mr-4 text-xs">₱{Number(m.price).toLocaleString()}</span>
                               <Button 
                                 size="sm" 
                                 variant="outline" 
@@ -431,7 +431,7 @@ export default function PharmacyInventoryPage() {
                                   setSelectedMedForRestock(m);
                                   setIsRestocking(true);
                                 }}
-                                className="rounded-xl border-slate-200 text-blue-600 font-bold h-8"
+                                className="rounded-sm border-slate-200 text-[#0f172a] font-black uppercase tracking-widest h-7 text-[9px]"
                               >
                                  <Plus className="h-3 w-3 mr-1" />
                                  Restock
@@ -449,10 +449,10 @@ export default function PharmacyInventoryPage() {
 
         {/* Transactions / Activity Feed */}
         <div className="space-y-6">
-          <Card className="border-none shadow-sm rounded-[2rem] overflow-hidden">
+          <Card className="border border-slate-200 rounded-sm overflow-hidden">
             <CardHeader className="bg-slate-50 border-b border-slate-100 px-8 py-6">
-              <CardTitle className="text-lg font-bold flex items-center gap-2">
-                <History className="h-5 w-5 text-slate-600" />
+              <CardTitle className="text-sm font-black flex items-center gap-2 uppercase tracking-widest text-[#0f172a]">
+                <History className="h-5 w-5 text-[#0f172a]" />
                 Recent Activity
               </CardTitle>
             </CardHeader>
@@ -460,22 +460,22 @@ export default function PharmacyInventoryPage() {
               {transactions.map((t) => (
                 <div key={t.id} className="flex items-start gap-4">
                   <div className={cn(
-                    "h-8 w-8 rounded-lg flex items-center justify-center shrink-0",
-                    t.type === 'DISPENSE' ? "bg-orange-50 text-orange-600" : "bg-green-50 text-green-600"
+                    "h-8 w-8 rounded-sm flex items-center justify-center shrink-0 border",
+                    t.type === 'DISPENSE' ? "bg-orange-50 text-orange-600 border-orange-100" : "bg-green-50 text-green-600 border-green-100"
                   )}>
                     {t.type === 'DISPENSE' ? <TrendingDown className="h-4 w-4" /> : <TrendingUp className="h-4 w-4" />}
                   </div>
                   <div className="flex-1 space-y-1">
-                    <p className="text-sm font-bold text-slate-900 leading-none">
+                    <p className="text-[10px] font-black text-[#0f172a] leading-none uppercase tracking-widest">
                       {t.type === 'DISPENSE' ? 'Dispensed' : 'Stock In'} {Math.abs(t.quantity)} units
                     </p>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase">{t.medication.name}</p>
-                    <p className="text-[8px] font-bold text-slate-300 uppercase">{new Date(t.createdAt).toLocaleTimeString()}</p>
+                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">{t.medication.name}</p>
+                    <p className="text-[8px] font-bold text-slate-300 uppercase tracking-widest">{new Date(t.createdAt).toLocaleTimeString()}</p>
                   </div>
                 </div>
               ))}
               {transactions.length === 0 && (
-                <p className="text-center text-xs font-bold text-slate-300 uppercase tracking-widest py-10">No recent transactions</p>
+                <p className="text-center text-[9px] font-black text-slate-300 uppercase tracking-[0.2em] py-10">No recent transactions</p>
               )}
             </CardContent>
           </Card>

@@ -61,119 +61,118 @@ export default function PatientsPage() {
   }, [query]);
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div className="max-w-full space-y-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 pb-6">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Master Patient Index</h1>
-          <p className="text-slate-500 mt-1">Search and manage patient identity records.</p>
+          <h1 className="text-xl font-black text-slate-900 uppercase tracking-tight">Master Patient Index</h1>
+          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">Identity Management & Record Synchronization</p>
         </div>
         
         {hasSearched && (
           <Protected permission="edit_patients">
             <Link
               href="/patients/new"
-              className="flex items-center px-6 py-3 bg-blue-600 text-white font-bold rounded-xl shadow-lg shadow-blue-200 hover:bg-blue-700 transition-all transform hover:-translate-y-0.5"
+              className="flex items-center px-6 h-9 bg-clinical-primary text-white text-[10px] font-black uppercase tracking-widest rounded-sm shadow-sm hover:bg-clinical-primary-dark transition-all"
             >
-              <UserPlus className="h-5 w-5 mr-2" />
+              <UserPlus className="h-4 w-4 mr-2" />
               Register New Patient
             </Link>
           </Protected>
         )}
       </div>
 
-      {/* The Gatekeeper Search */}
-      <div className="relative group">
-        <div className="absolute inset-0 bg-blue-600/5 rounded-3xl blur-xl group-focus-within:bg-blue-600/10 transition-all"></div>
-        <div className="relative bg-white dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-800 rounded-3xl shadow-sm p-2 flex items-center group-focus-within:border-blue-500 transition-all">
-          <div className="pl-6 flex items-center text-slate-400 group-focus-within:text-blue-500 transition-colors">
-            <Search className="h-6 w-6" />
+      {/* The Utilitarian Search */}
+      <div className="relative">
+        <div className="relative bg-white border border-slate-300 rounded-sm shadow-sm flex items-center focus-within:border-clinical-primary transition-all overflow-hidden">
+          <div className="pl-4 flex items-center text-slate-400">
+            <Search className="h-4 w-4" />
           </div>
           <input
             autoFocus
             placeholder="Search by Name, Patient ID, PhilHealth PIN, or National ID..."
-            className="flex-1 px-6 py-5 text-xl font-medium border-none focus:ring-0 placeholder:text-slate-400 dark:placeholder:text-slate-500 bg-transparent text-slate-900 dark:text-white outline-none"
+            className="flex-1 px-4 py-3 text-sm font-bold border-none focus:ring-0 placeholder:text-slate-400 bg-transparent text-slate-900 outline-none"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />
           {loading && (
-            <div className="pr-6">
-              <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
+            <div className="pr-4">
+              <Loader2 className="h-4 w-4 animate-spin text-clinical-primary" />
             </div>
           )}
         </div>
       </div>
 
-      {/* Search Results */}
-      <div className="space-y-4">
+      {/* Search Results - High Density List */}
+      <div className="space-y-1">
         {loading ? (
           <div className="py-20 text-center">
-            <p className="text-slate-400 font-medium animate-pulse">Checking records...</p>
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest animate-pulse">Scanning Global Patient Database...</p>
           </div>
         ) : query.length >= 2 ? (
           results.length > 0 ? (
-            <div className="grid grid-cols-1 gap-4">
+            <div className="grid grid-cols-1 gap-1">
               {results.map((patient) => (
                 <Link
                   key={patient.id}
                   href={`/patients/${patient.id}`}
-                  className="bg-white border border-slate-100 p-6 rounded-2xl flex items-center justify-between hover:border-blue-200 hover:shadow-md transition-all group"
+                  className="bg-white border border-slate-200 p-4 rounded-sm flex items-center justify-between hover:border-clinical-primary/30 hover:bg-slate-50/50 transition-all group"
                 >
-                  <div className="flex items-center gap-6">
-                    <div className="h-14 w-14 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-blue-50 group-hover:text-blue-600 transition-colors">
-                      <User className="h-7 w-7" />
+                  <div className="flex items-center gap-4">
+                    <div className="h-10 w-10 rounded-sm bg-slate-900 flex items-center justify-center text-white text-[10px] font-black group-hover:bg-clinical-primary transition-colors border border-slate-800">
+                      {patient.lastName[0]}{patient.firstName[0]}
                     </div>
                     <div>
-                      <h3 className="text-xl font-bold text-slate-900 leading-none mb-2">
+                      <h3 className="text-sm font-black text-slate-900 leading-none mb-1 group-hover:text-clinical-primary transition-colors">
                         {patient.lastName}, {patient.firstName} {patient.middleName && `${patient.middleName[0]}.`}
                       </h3>
-                      <div className="flex items-center gap-4 text-xs font-bold text-slate-400 uppercase tracking-widest">
-                        <span className="bg-slate-100 px-2 py-0.5 rounded">{patient.patientId}</span>
-                        <span>•</span>
+                      <div className="flex items-center gap-3 text-[9px] font-bold text-slate-400 uppercase tracking-widest">
+                        <span className="bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded-sm">{patient.patientId}</span>
+                        <span className="h-1 w-1 rounded-full bg-slate-200" />
                         <span>{patient.gender}</span>
-                        <span>•</span>
-                        <span>{new Date(patient.dateOfBirth).toLocaleDateString()}</span>
+                        <span className="h-1 w-1 rounded-full bg-slate-200" />
+                        <span>DOB: {new Date(patient.dateOfBirth).toLocaleDateString()}</span>
                       </div>
                     </div>
                   </div>
                   
-                  <div className="flex items-center gap-8">
+                  <div className="flex items-center gap-6">
                     <div className="hidden md:flex flex-col items-end gap-1">
                       {patient.philHealthPIN && (
-                        <div className="flex items-center text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-md">
+                        <div className="flex items-center text-[9px] font-black text-clinical-primary bg-clinical-primary/5 px-2 py-0.5 rounded-sm border border-clinical-primary/10 uppercase tracking-tighter">
                           <ShieldCheck className="h-3 w-3 mr-1" />
                           PH: {patient.philHealthPIN}
                         </div>
                       )}
                       {patient.nationalId && (
-                        <div className="flex items-center text-[10px] font-bold text-slate-600 bg-slate-50 px-2 py-1 rounded-md">
+                        <div className="flex items-center text-[9px] font-black text-slate-600 bg-slate-50 px-2 py-0.5 rounded-sm border border-slate-200 uppercase tracking-tighter">
                           <IdCard className="h-3 w-3 mr-1" />
                           NAT: {patient.nationalId}
                         </div>
                       )}
                     </div>
-                    <div className="h-10 w-10 rounded-full border border-slate-100 flex items-center justify-center text-slate-300 group-hover:text-blue-600 group-hover:border-blue-200 transition-all">
-                      <ArrowRight className="h-5 w-5" />
+                    <div className="h-8 w-8 rounded-sm border border-slate-200 flex items-center justify-center text-slate-300 group-hover:text-clinical-primary group-hover:border-clinical-primary/20 group-hover:bg-white transition-all">
+                      <ArrowRight className="h-4 w-4" />
                     </div>
                   </div>
                 </Link>
               ))}
             </div>
           ) : (
-            <div className="py-20 text-center bg-slate-50 rounded-3xl border border-dashed border-slate-200">
+            <div className="py-20 text-center bg-slate-50 rounded-sm border border-dashed border-slate-200">
               <div className="max-w-xs mx-auto">
-                <div className="h-16 w-16 bg-white rounded-2xl shadow-sm flex items-center justify-center mx-auto mb-4">
-                  <UserPlus className="h-8 w-8 text-slate-300" />
+                <div className="h-12 w-12 bg-white rounded-sm border border-slate-200 shadow-sm flex items-center justify-center mx-auto mb-4">
+                  <UserPlus className="h-6 w-6 text-slate-300" />
                 </div>
-                <h3 className="text-lg font-bold text-slate-900 mb-2">No Records Found</h3>
-                <p className="text-sm text-slate-500 mb-6">
-                  We couldn&apos;t find any patient matching &quot;<span className="font-bold text-slate-900">{query}</span>&quot;.
+                <h3 className="text-sm font-black text-slate-900 mb-1 uppercase tracking-tight">No Matching Records</h3>
+                <p className="text-[10px] font-bold text-slate-400 mb-6 uppercase tracking-widest leading-relaxed">
+                  The criteria &quot;<span className="text-slate-900">{query}</span>&quot; returned zero identity matches.
                 </p>
                 <Protected permission="edit_patients">
                   <Link
                     href="/patients/new"
-                    className="inline-flex items-center px-8 py-3 bg-blue-600 text-white font-bold rounded-xl shadow-lg shadow-blue-100 hover:bg-blue-700 transition-all"
+                    className="inline-flex items-center px-8 h-10 bg-clinical-primary text-white text-[10px] font-black uppercase tracking-widest rounded-sm shadow-sm hover:bg-clinical-primary-dark transition-all"
                   >
-                    Create New Record
+                    Register New Record
                   </Link>
                 </Protected>
               </div>
@@ -182,9 +181,9 @@ export default function PatientsPage() {
         ) : (
           <div className="py-32 text-center">
              <div className="max-w-sm mx-auto opacity-20">
-                <Search className="h-20 w-20 mx-auto mb-6 text-slate-400" />
-                <p className="text-xl font-bold text-slate-900">Patient Gatekeeper</p>
-                <p className="text-sm">Perform a mandatory search to begin.</p>
+                <Search className="h-16 w-16 mx-auto mb-4 text-slate-400" />
+                <p className="text-sm font-black text-slate-900 uppercase tracking-widest">Mandatory Search Protocol</p>
+                <p className="text-[10px] font-bold uppercase tracking-widest mt-1">Identity validation required before entry.</p>
              </div>
           </div>
         )}

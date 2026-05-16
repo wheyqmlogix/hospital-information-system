@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-05-16T12:00:00Z",
+  "title": "Design System: Cliniq HIS",
+  "extensions": {
+    "colorMeta": {
+      "primary": { "role": "primary", "displayName": "Clinical Teal", "canonical": "oklch(52.6% 0.124 216.5)", "tonalRamp": ["#083344", "#0e7490", "#22d3ee", "#cffafe"] },
+      "neutral-bg": { "role": "neutral", "displayName": "Frost White", "canonical": "oklch(98% 0.005 210)", "tonalRamp": ["#0f172a", "#64748b", "#cbd5e1", "#f8fafc"] }
+    },
+    "shadows": [
+      { "name": "functional-lift", "value": "0 1px 3px rgba(0,0,0,0.1)", "purpose": "Subtle depth for active elements." }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "640px" },
+      { "name": "md", "value": "768px" },
+      { "name": "lg", "value": "1024px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The main action button used throughout the system.",
+      "html": "<button class=\"ds-btn-primary\">CONFIRM ORDER</button>",
+      "css": ".ds-btn-primary { background: #0e7490; color: #fff; padding: 8px 16px; border-radius: 6px; border: none; font-weight: 600; font-size: 0.875rem; cursor: pointer; transition: background 0.2s; } .ds-btn-primary:hover { background: #0891b2; }"
+    },
+    {
+      "name": "Clinical Card",
+      "kind": "card",
+      "refersTo": "card-clinical",
+      "description": "Standard container for patient records and dashboard widgets.",
+      "html": "<div class=\"ds-card-clinical\"><h3 class=\"ds-card-title\">Patient Vitals</h3><div class=\"ds-card-content\">BP: 120/80 mmHg</div></div>",
+      "css": ".ds-card-clinical { background: #fff; border: 1px solid #e2e8f0; border-radius: 6px; padding: 24px; } .ds-card-title { font-size: 1.125rem; font-weight: 700; margin-bottom: 12px; color: #0f172a; } .ds-card-content { font-size: 0.875rem; color: #64748b; }"
+    },
+    {
+      "name": "Triage Badge",
+      "kind": "chip",
+      "description": "Functional indicator for patient urgency.",
+      "html": "<span class=\"ds-badge-triage ds-triage-1\">IMMEDIATE (L1)</span>",
+      "css": ".ds-badge-triage { padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; } .ds-triage-1 { background: #fee2e2; color: #ef4444; border: 1px solid #fecaca; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "Clinical Precision",
+    "overview": "Cliniq HIS is designed for high-stress medical environments where clarity, speed, and accuracy are paramount. The aesthetic philosophy is 'Sterile Modernism'—a clean, high-contrast interface that prioritizes legibility and information density without feeling cluttered.",
+    "keyCharacteristics": ["High Legibility", "Functional Density", "Sterile Palette", "Deterministic Color"],
+    "rules": [
+      { "name": "The Triage Hierarchy Rule", "body": "Vibrant colors are reserved strictly for patient status and triage levels.", "section": "colors" },
+      { "name": "The Flat-By-Default Rule", "body": "Surfaces are flat at rest. Elevation is only used to indicate interaction.", "section": "elevation" }
+    ],
+    "dos": ["Do use clinical teal for primary actions.", "Do prioritize information density in patient dashboards."],
+    "donts": ["Don't use gradients or glassmorphism.", "Don't use soft 'pill' shapes for buttons."]
+  }
+}

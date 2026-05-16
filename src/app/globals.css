@@ -1,62 +1,63 @@
 @import "tailwindcss";
 
+:root {
+  --background: #ffffff;
+  --foreground: #0f172a;
+  
+  --card: #ffffff;
+  --card-foreground: #0f172a;
+  
+  --popover: #ffffff;
+  --popover-foreground: #0f172a;
+  
+  --primary: #0f172a;
+  --primary-foreground: #ffffff;
+  
+  --secondary: #f8fafc;
+  --secondary-foreground: #475569;
+  
+  --muted: #f1f5f9;
+  --muted-foreground: #64748b;
+  
+  --accent: #f8fafc;
+  --accent-foreground: #0f172a;
+  
+  --destructive: #991b1b;
+  --destructive-foreground: #ffffff;
+  
+  /* Institutional Silver/Ice Input Palette */
+  --border: #e2e8f0;
+  --input: #cbd5e1;
+  --input-surface: #fcfcfc;
+  --ring: #0f172a;
+  
+  --radius: 2px; /* Sharp Swiss Edges */
+}
+
 @theme {
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, monospace;
   
-  /* Medical Grade Color Palette */
-  --color-medical-primary: #2563eb;
-  --color-medical-secondary: #64748b;
-  --color-medical-background: #f8fafc;
-  --color-medical-surface: #ffffff;
-  --color-medical-border: #e2e8f0;
+  /* Silver-Ice Clinical Tints (OKLCH) */
+  --color-clinical-primary: #0f172a;
+  --color-clinical-accent: #475569;
+  --color-clinical-background: #ffffff;
+  --color-clinical-surface: #f8fafc;
+  --color-clinical-border: oklch(90% 0.01 240); /* Silver */
+  --color-input-focus: #0f172a;
+  
+  /* Muted Functional Colors */
+  --color-triage-1: #991b1b;
+  --color-triage-2: #9a3412;
+  --color-triage-3: #854d0e;
+  --color-triage-4: #166534;
+  --color-triage-5: #1e40af;
 }
 
-:root {
-  --background: #f8fafc;
-  --foreground: #0f172a;
-  --card: #ffffff;
-  --card-foreground: #0f172a;
-  --popover: #ffffff;
-  --popover-foreground: #0f172a;
-  --primary: #2563eb;
-  --primary-foreground: #ffffff;
-  --secondary: #f1f5f9;
-  --secondary-foreground: #1e293b;
-  --muted: #f1f5f9;
-  --muted-foreground: #64748b;
-  --accent: #f1f5f9;
-  --accent-foreground: #1e293b;
-  --destructive: #ef4444;
-  --destructive-foreground: #f8fafc;
-  --border: #e2e8f0;
-  --input: #e2e8f0;
-  --ring: #3b82f6;
-  --radius: 0.5rem;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0f172a;
-    --foreground: #f8fafc;
-    --card: #1e293b;
-    --card-foreground: #f8fafc;
-    --popover: #1e293b;
-    --popover-foreground: #f8fafc;
-    --primary: #3b82f6;
-    --primary-foreground: #0f172a;
-    --secondary: #334155;
-    --secondary-foreground: #f8fafc;
-    --muted: #334155;
-    --muted-foreground: #94a3b8;
-    --accent: #334155;
-    --accent-foreground: #f8fafc;
-    --destructive: #7f1d1d;
-    --destructive-foreground: #f8fafc;
-    --border: #334155;
-    --input: #334155;
-    --ring: #1d4ed8;
-  }
+/* Ensure main content scrolls properly but doesn't rubber band at the top level */
+html, body {
+  height: 100%;
+  width: 100%;
 }
 
 body {
@@ -65,12 +66,47 @@ body {
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  letter-spacing: -0.015em;
+  overscroll-behavior-y: none; /* Prevent pull-to-refresh on body */
+  -webkit-tap-highlight-color: transparent;
+  overflow-x: hidden;
 }
 
-/* Custom Scrollbar for Medical Aesthetic */
+/* Safe area insets for notches */
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.pt-safe {
+  padding-top: env(safe-area-inset-top);
+}
+
+/* Standalone Mode specific overrides */
+@media (display-mode: standalone) {
+  .standalone-hidden {
+    display: none;
+  }
+}
+
+/* Institutional Utilities */
+.technical-label {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted-foreground);
+}
+
+.institutional-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+/* Precise Technical Scrollbars */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 4px;
+  height: 4px;
 }
 
 ::-webkit-scrollbar-track {
@@ -78,20 +114,9 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--border);
-  border-radius: 10px;
+  background: #e2e8f0;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--muted-foreground);
-}
-
-/* Subtle Card Hover Effects */
-.medical-card-hover {
-  transition: all 0.2s ease-in-out;
-}
-
-.medical-card-hover:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  background: #cbd5e1;
 }

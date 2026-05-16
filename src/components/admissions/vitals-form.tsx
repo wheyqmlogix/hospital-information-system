@@ -74,85 +74,85 @@ export function VitalsForm({ admissionId, onSuccess, onCancel }: VitalsFormProps
   };
 
   return (
-    <Card className="border-none shadow-xl rounded-3xl bg-slate-50/50">
-      <CardContent className="p-8">
-        <div className="flex items-center justify-between mb-8">
+    <Card className="border shadow-sm rounded-md bg-white">
+      <CardContent className="p-6">
+        <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-100">
            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 bg-blue-600 rounded-xl flex items-center justify-center text-white">
-                 <HeartPulse className="h-6 w-6" />
+              <div className="h-8 w-8 bg-clinical-primary rounded-sm flex items-center justify-center text-white">
+                 <HeartPulse className="h-5 w-5" />
               </div>
-              <h3 className="text-xl font-bold text-slate-900">Record Vitals</h3>
+              <h3 className="text-lg font-black text-slate-900 uppercase tracking-tight">Record Patient Vitals</h3>
            </div>
-           <Button variant="ghost" size="icon" onClick={onCancel} className="rounded-full">
-              <X className="h-5 w-5" />
+           <Button variant="ghost" size="icon" onClick={onCancel} className="h-8 w-8 rounded">
+              <X className="h-4 w-4" />
            </Button>
         </div>
 
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            <div className="space-y-2">
-              <Label className="text-xs font-bold text-slate-400 uppercase tracking-widest">Blood Pressure (S/D)</Label>
-              <div className="flex items-center gap-2">
-                <Input placeholder="Sys" {...form.register("bpSystolic")} className="h-12 rounded-xl text-center font-bold" />
-                <span className="text-slate-300">/</span>
-                <Input placeholder="Dia" {...form.register("bpDiastolic")} className="h-12 rounded-xl text-center font-bold" />
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-6">
+            <div className="space-y-1.5">
+              <Label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Blood Pressure (S/D)</Label>
+              <div className="flex items-center gap-1.5">
+                <Input placeholder="Sys" {...form.register("bpSystolic")} className="h-9 rounded-sm text-center font-bold bg-slate-50 focus:bg-white" />
+                <span className="text-slate-300 font-bold">/</span>
+                <Input placeholder="Dia" {...form.register("bpDiastolic")} className="h-9 rounded-sm text-center font-bold bg-slate-50 focus:bg-white" />
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label className="text-xs font-bold text-slate-400 uppercase tracking-widest">Temp (°C)</Label>
+            <div className="space-y-1.5">
+              <Label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Temperature (°C)</Label>
               <div className="relative">
-                 <Input {...form.register("temperature")} className="h-12 rounded-xl pl-10 font-bold" />
-                 <Thermometer className="absolute left-3 top-3.5 h-5 w-5 text-slate-300" />
+                 <Input {...form.register("temperature")} className="h-9 rounded-sm pl-8 font-bold bg-slate-50 focus:bg-white" />
+                 <Thermometer className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-400" />
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label className="text-xs font-bold text-slate-400 uppercase tracking-widest">Pulse (bpm)</Label>
+            <div className="space-y-1.5">
+              <Label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Pulse Rate (bpm)</Label>
               <div className="relative">
-                 <Input {...form.register("pulseRate")} className="h-12 rounded-xl pl-10 font-bold" />
-                 <Activity className="absolute left-3 top-3.5 h-5 w-5 text-slate-300" />
+                 <Input {...form.register("pulseRate")} className="h-9 rounded-sm pl-8 font-bold bg-slate-50 focus:bg-white" />
+                 <Activity className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-400" />
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label className="text-xs font-bold text-slate-400 uppercase tracking-widest">SpO2 (%)</Label>
+            <div className="space-y-1.5">
+              <Label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Oxygen Sat (SpO2 %)</Label>
               <div className="relative">
-                 <Input {...form.register("o2Saturation")} className="h-12 rounded-xl pl-10 font-bold" />
-                 <Wind className="absolute left-3 top-3.5 h-5 w-5 text-slate-300" />
+                 <Input {...form.register("o2Saturation")} className="h-9 rounded-sm pl-8 font-bold bg-slate-50 focus:bg-white" />
+                 <Wind className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-400" />
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label className="text-xs font-bold text-slate-400 uppercase tracking-widest">Resp (bpm)</Label>
-              <Input {...form.register("respiratoryRate")} className="h-12 rounded-xl font-bold" />
+            <div className="space-y-1.5">
+              <Label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Respiratory (bpm)</Label>
+              <Input {...form.register("respiratoryRate")} className="h-9 rounded-sm font-bold bg-slate-50 focus:bg-white" />
             </div>
 
-            <div className="space-y-2">
-              <Label className="text-xs font-bold text-slate-400 uppercase tracking-widest">Weight (kg)</Label>
+            <div className="space-y-1.5">
+              <Label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Weight (kg)</Label>
               <div className="relative">
-                 <Input {...form.register("weight")} className="h-12 rounded-xl pl-10 font-bold" />
-                 <Scale className="absolute left-3 top-3.5 h-5 w-5 text-slate-300" />
+                 <Input {...form.register("weight")} className="h-9 rounded-sm pl-8 font-bold bg-slate-50 focus:bg-white" />
+                 <Scale className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-400" />
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label className="text-xs font-bold text-slate-400 uppercase tracking-widest">Height (cm)</Label>
+            <div className="space-y-1.5">
+              <Label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Height (cm)</Label>
               <div className="relative">
-                 <Input {...form.register("height")} className="h-12 rounded-xl pl-10 font-bold" />
-                 <Ruler className="absolute left-3 top-3.5 h-5 w-5 text-slate-300" />
+                 <Input {...form.register("height")} className="h-9 rounded-sm pl-8 font-bold bg-slate-50 focus:bg-white" />
+                 <Ruler className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-400" />
               </div>
             </div>
           </div>
 
-          <div className="flex justify-end gap-3 pt-4">
-             <Button type="button" variant="ghost" onClick={onCancel} className="font-bold text-slate-500 rounded-xl px-6">
+          <div className="flex justify-end gap-2 pt-4 border-t border-slate-50">
+             <Button type="button" variant="ghost" onClick={onCancel} className="text-xs font-bold text-slate-500 uppercase tracking-wider h-9 px-6">
                 Cancel
              </Button>
              <Button 
                type="submit" 
                disabled={isSubmitting}
-               className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl px-8 font-bold shadow-lg shadow-blue-100"
+               className="bg-clinical-primary hover:bg-clinical-primary-dark text-white rounded-sm h-9 px-8 font-bold uppercase tracking-wider shadow-sm"
              >
                 {isSubmitting ? "Saving..." : "Record Vitals"}
              </Button>

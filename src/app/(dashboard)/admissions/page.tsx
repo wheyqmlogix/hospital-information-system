@@ -41,11 +41,11 @@ interface ERAdmission {
 }
 
 const triageConfig = {
-  LEVEL_1: { label: "Resuscitation", color: "bg-red-600", text: "text-white", pulse: "animate-pulse" },
-  LEVEL_2: { label: "Emergent", color: "bg-orange-500", text: "text-white", pulse: "" },
-  LEVEL_3: { label: "Urgent", color: "bg-amber-400", text: "text-amber-950", pulse: "" },
-  LEVEL_4: { label: "Less Urgent", color: "bg-green-500", text: "text-white", pulse: "" },
-  LEVEL_5: { label: "Non-Urgent", color: "bg-blue-500", text: "text-white", pulse: "" },
+  LEVEL_1: { label: "Immediate (L1)", color: "text-[#991b1b] border-[#991b1b]/20 bg-red-50/30", pulse: "" },
+  LEVEL_2: { label: "Emergent (L2)", color: "text-[#9a3412] border-[#9a3412]/20 bg-orange-50/30", pulse: "" },
+  LEVEL_3: { label: "Urgent (L3)", color: "text-[#854d0e] border-[#854d0e]/20 bg-amber-50/30", pulse: "" },
+  LEVEL_4: { label: "Less Urgent (L4)", color: "text-[#166534] border-[#166534]/20 bg-green-50/30", pulse: "" },
+  LEVEL_5: { label: "Non-Urgent (L5)", color: "text-[#1e40af] border-[#1e40af]/20 bg-blue-50/30", pulse: "" },
 };
 
 export default function ERDashboard() {
@@ -80,134 +80,124 @@ export default function ERDashboard() {
   };
 
   return (
-    <div className="max-w-[1600px] mx-auto space-y-8">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div className="max-w-full space-y-8">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-slate-200 pb-8">
         <div>
-          <div className="flex items-center gap-2 mb-1">
-             <div className="h-3 w-3 rounded-full bg-red-500 animate-pulse" />
-             <h1 className="text-3xl font-bold text-slate-900 tracking-tight">ER Command Center</h1>
-          </div>
-          <p className="text-slate-500">Real-time emergency triage and queue management.</p>
+          <h1 className="text-2xl font-black text-[#0f172a] uppercase tracking-tight leading-none mb-3">Emergency Clinical Registry</h1>
+          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Real-time Status Monitoring & Triage Coordination</p>
         </div>
         
-        <div className="flex items-center gap-3">
-          <Button variant="outline" onClick={fetchQueue} disabled={loading} className="rounded-xl border-slate-200">
-            <RefreshCw className={cn("h-4 w-4 mr-2", loading && "animate-spin")} />
-            Refresh
+        <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={fetchQueue} disabled={loading} className="h-8 text-[9px] font-black uppercase tracking-widest border-slate-300">
+            <RefreshCw className={cn("h-3 w-3 mr-2", loading && "animate-spin")} />
+            Sync Records
           </Button>
           <Link href="/patients">
-            <Button className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow-lg shadow-blue-100 font-bold">
-              <Plus className="h-5 w-5 mr-2" />
-              New ER Admission
+            <Button className="bg-[#0f172a] text-white h-8 px-6 text-[9px] font-black uppercase tracking-widest">
+              <Plus className="h-3 w-3 mr-2" />
+              Initialize Admission
             </Button>
           </Link>
         </div>
       </div>
 
-      {/* Stats Summary */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      {/* Stats Summary - Minimal Institutional Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-0 border border-slate-200 divide-x divide-slate-200">
          {[
-           { label: "Active Cases", value: admissions.length, icon: Activity, color: "text-blue-600" },
-           { label: "Critical (L1/L2)", value: admissions.filter(a => ["LEVEL_1", "LEVEL_2"].includes(a.triageLevel)).length, icon: AlertTriangle, color: "text-red-600" },
-           { label: "Avg Wait Time", value: "14m", icon: Clock, color: "text-amber-600" },
-           { label: "Available Bays", value: "8/12", icon: Timer, color: "text-green-600" },
+           { label: "Active Admissions", value: admissions.length, icon: Activity },
+           { label: "Critical Priority", value: admissions.filter(a => ["LEVEL_1", "LEVEL_2"].includes(a.triageLevel)).length, icon: AlertTriangle },
+           { label: "Institutional Wait", value: "14m", icon: Clock },
+           { label: "Unit Capacity", value: "8/12", icon: Timer },
          ].map((stat, i) => (
-           <Card key={i} className="border-none shadow-sm rounded-3xl overflow-hidden">
-             <CardContent className="p-6 flex items-center justify-between">
-                <div>
-                   <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">{stat.label}</p>
-                   <p className="text-2xl font-black text-slate-900">{stat.value}</p>
-                </div>
-                <div className={cn("p-4 rounded-2xl bg-slate-50", stat.color)}>
-                   <stat.icon className="h-6 w-6" />
-                </div>
-             </CardContent>
-           </Card>
+           <div key={i} className="p-6 bg-white">
+              <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">{stat.label}</p>
+              <div className="flex items-end justify-between">
+                <p className="text-3xl font-black text-[#0f172a] tracking-tighter leading-none">{stat.value}</p>
+                <stat.icon className="h-4 w-4 text-slate-200" />
+              </div>
+           </div>
          ))}
       </div>
 
-      {/* ER Queue Table */}
-      <div className="bg-white border border-slate-100 rounded-[2rem] shadow-sm overflow-hidden">
+      {/* ER Queue Table - Swiss High Density */}
+      <div className="bg-white border border-slate-200 shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-slate-50 border-b border-slate-100">
-                <th className="px-8 py-5 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Priority</th>
-                <th className="px-8 py-5 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Patient</th>
-                <th className="px-8 py-5 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Chief Complaint</th>
-                <th className="px-8 py-5 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Latest Vitals</th>
-                <th className="px-8 py-5 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Wait Time</th>
-                <th className="px-8 py-5 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-right">Actions</th>
+              <tr className="bg-slate-50 border-b border-slate-200">
+                <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-[0.15em] border-r border-slate-100">Status</th>
+                <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-[0.15em] border-r border-slate-100">Patient Identification</th>
+                <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-[0.15em] border-r border-slate-100">Clinical Narrative</th>
+                <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-[0.15em] border-r border-slate-100">Vital Parameters</th>
+                <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-[0.15em] border-r border-slate-100">Duration</th>
+                <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-[0.15em] text-right">Navigation</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-50">
+            <tbody className="divide-y divide-slate-100">
               {admissions.length > 0 ? admissions.map((adm) => {
                 const config = triageConfig[adm.triageLevel];
                 const latestVitals = adm.vitals[0];
                 
                 return (
-                  <tr key={adm.id} className="hover:bg-slate-50/50 transition-colors group">
-                    <td className="px-8 py-6">
+                  <tr key={adm.id} className="hover:bg-[#fcfcfc] transition-colors group">
+                    <td className="px-6 py-4 border-r border-slate-50">
                        <div className={cn(
-                         "inline-flex items-center px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-tighter",
-                         config.color,
-                         config.text,
-                         config.pulse
+                         "inline-flex items-center px-2 py-0.5 rounded-[1px] text-[8px] font-black uppercase tracking-widest border",
+                         config.color
                        )}>
                          {config.label}
                        </div>
                     </td>
-                    <td className="px-8 py-6">
+                    <td className="px-6 py-4 border-r border-slate-50">
                       <div className="flex items-center gap-4">
-                        <div className="h-10 w-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-400">
-                           <User className="h-5 w-5" />
+                        <div className="h-7 w-7 rounded-[1px] bg-slate-50 flex items-center justify-center text-slate-300 text-[9px] font-black border border-slate-100 group-hover:bg-[#0f172a] group-hover:text-white transition-colors">
+                           {adm.patient.lastName[0]}{adm.patient.firstName[0]}
                         </div>
                         <div>
-                          <p className="font-bold text-slate-900 leading-tight">
+                          <p className="text-[11px] font-black text-[#0f172a] leading-none mb-1 uppercase tracking-tight">
                             {adm.patient.lastName}, {adm.patient.firstName}
                           </p>
-                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                            {adm.patient.gender[0]} • {new Date().getFullYear() - new Date(adm.patient.dateOfBirth).getFullYear()}Y
+                          <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">
+                            {adm.patient.gender[0]} • {new Date().getFullYear() - new Date(adm.patient.dateOfBirth).getFullYear()}Y • {adm.admissionId}
                           </p>
                         </div>
                       </div>
                     </td>
-                    <td className="px-8 py-6">
-                      <p className="text-sm font-medium text-slate-600 max-w-[200px] truncate">
+                    <td className="px-6 py-4 border-r border-slate-50">
+                      <p className="text-[10px] font-bold text-slate-500 max-w-[180px] truncate uppercase tracking-tight">
                         {adm.chiefComplaint}
                       </p>
                     </td>
-                    <td className="px-8 py-6">
+                    <td className="px-6 py-4 border-r border-slate-50">
                       {latestVitals ? (
-                        <div className="flex items-center gap-4 text-xs font-bold">
-                           <div className="flex items-center gap-1 text-red-600">
-                              <HeartPulse className="h-3 w-3" />
+                        <div className="flex items-center gap-4 text-[9px] font-black uppercase tracking-tighter">
+                           <div className="flex items-center gap-1.5 text-slate-900">
+                              <span className="text-slate-300">BP</span>
                               {latestVitals.bpSystolic}/{latestVitals.bpDiastolic}
                            </div>
-                           <div className="flex items-center gap-1 text-blue-600">
-                              <Thermometer className="h-3 w-3" />
+                           <div className="flex items-center gap-1.5 text-slate-900">
+                              <span className="text-slate-300">TMP</span>
                               {latestVitals.temperature}°C
                            </div>
-                           <div className="flex items-center gap-1 text-green-600">
-                              <Activity className="h-3 w-3" />
+                           <div className="flex items-center gap-1.5 text-slate-900">
+                              <span className="text-slate-300">OXG</span>
                               {latestVitals.o2Saturation}%
                            </div>
                         </div>
                       ) : (
-                        <span className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">No Vitals</span>
+                        <span className="text-[8px] font-black text-slate-300 uppercase tracking-[0.2em]">Pending</span>
                       )}
                     </td>
-                    <td className="px-8 py-6">
-                      <div className="flex items-center gap-2 text-slate-600 font-bold">
-                        <Clock className="h-4 w-4 text-slate-300" />
+                    <td className="px-6 py-4 border-r border-slate-50">
+                      <div className="flex items-center gap-2 text-[#0f172a] font-black text-[10px] uppercase">
+                        <Clock className="h-3 w-3 text-slate-200" />
                         {calculateWaitTime(adm.admittedAt)}
                       </div>
                     </td>
-                    <td className="px-8 py-6 text-right">
+                    <td className="px-6 py-4 text-right">
                        <Link href={`/admissions/${adm.id}`}>
-                          <Button variant="ghost" size="sm" className="rounded-lg text-blue-600 hover:text-blue-700 hover:bg-blue-50 font-bold">
-                            Review
-                            <ChevronRight className="h-4 w-4 ml-1" />
+                          <Button variant="outline" size="sm" className="h-7 px-3 rounded-[1px] border-slate-200 text-[#0f172a] text-[8px] font-black uppercase tracking-[0.2em]">
+                            Open Record
                           </Button>
                        </Link>
                     </td>
@@ -215,10 +205,9 @@ export default function ERDashboard() {
                 );
               }) : (
                 <tr>
-                  <td colSpan={6} className="py-20 text-center">
-                    <div className="max-w-xs mx-auto opacity-20">
-                       <Activity className="h-12 w-12 mx-auto mb-4" />
-                       <p className="font-bold text-slate-900 uppercase tracking-widest">No Active ER Cases</p>
+                  <td colSpan={6} className="py-24 text-center">
+                    <div className="max-w-xs mx-auto">
+                       <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.3em] leading-relaxed">System State: No Active Admissions Detected</p>
                     </div>
                   </td>
                 </tr>
