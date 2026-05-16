@@ -22,7 +22,19 @@ export async function GET() {
     await authorize("system_admin");
     console.log("GET /api/admin/staff - Authorized, fetching staff directory");
     const staff = await prisma.staff.findMany({
-      orderBy: { lastName: "asc" }
+      orderBy: { lastName: "asc" },
+      include: {
+        user: {
+          select: {
+            email: true,
+          }
+        },
+        department: {
+          select: {
+            name: true,
+          }
+        }
+      }
     });
     console.log(`GET /api/admin/staff - Found ${staff.length} staff members`);
     return NextResponse.json(staff);

@@ -53,10 +53,12 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(true);
   const [confirmModal, setConfirmModal] = useState<{
     isOpen: boolean;
-    departmentId: string | null;
+    type: "department" | "staff";
+    id: string | null;
   }>({
     isOpen: false,
-    departmentId: null,
+    type: "department",
+    id: null,
   });
 
   const fetchData = async () => {
@@ -86,6 +88,21 @@ export default function SettingsPage() {
       } else {
         const error = await res.json();
         toast.error(error.error || "Failed to remove department");
+      }
+    } catch (error) {
+      toast.error("Audit Failure: System Communication Error");
+    }
+  };
+
+  const deleteStaff = async (id: string) => {
+    try {
+      const res = await fetch(`/api/admin/staff/${id}`, { method: "DELETE" });
+      if (res.ok) {
+        toast.success("Personnel removed from registry");
+        fetchData();
+      } else {
+        const error = await res.json();
+        toast.error(error.error || "Failed to remove personnel");
       }
     } catch (error) {
       toast.error("Audit Failure: System Communication Error");
@@ -205,9 +222,21 @@ export default function SettingsPage() {
                           <p className="text-[9px] font-black text-slate-400 uppercase tracking-wider">{member.user?.email || "Account Pending"}</p>
                         </td>
                         <td className="px-8 py-4 text-right">
-                          <Button variant="ghost" size="icon" className="h-7 w-7 rounded-[1px] hover:bg-slate-50 transition-colors">
-                            <MoreVertical className="h-3.5 w-3.5 text-slate-300" />
-                          </Button>
+                          <div className="flex items-center justify-end gap-1">
+                            <Link href={`/settings/staff/edit/${member.id}`}>
+                              <Button variant="ghost" size="icon" className="h-7 w-7 rounded-[1px] hover:bg-slate-50 transition-colors">
+                                <Edit className="h-3.5 w-3.5 text-slate-300 hover:text-[#0f172a]" />
+                              </Button>
+                            </Link>
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              onClick={() => setConfirmModal({ isOpen: true, type: "staff", id: member.id })}
+                              className="h-7 w-7 rounded-[1px] hover:bg-red-50 transition-colors"
+                            >
+                              <Trash2 className="h-3.5 w-3.5 text-slate-300 hover:text-red-600" />
+                            </Button>
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -238,7 +267,7 @@ export default function SettingsPage() {
                       <Button 
                         variant="ghost" 
                         size="icon" 
-                        onClick={() => setConfirmModal({ isOpen: true, departmentId: dept.id })}
+                        onClick={() => setConfirmModal({ isOpen: true, type: "department", id: dept.id })}
                         className="h-8 w-8 text-slate-300 hover:text-red-600 hover:bg-red-50 transition-all"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
@@ -271,14 +300,20 @@ export default function SettingsPage() {
 
       <ConfirmationModal
         isOpen={confirmModal.isOpen}
-        onClose={() => setConfirmModal({ isOpen: false, departmentId: null })}
+        onClose={() => setConfirmModal({ isOpen: false, type: "department", id: null })}
         onConfirm={() => {
-          if (confirmModal.departmentId) {
-            deleteDepartment(confirmModal.departmentId);
+          if (confirmModal.id) {
+            if (confirmModal.type === "department") {
+              deleteDepartment(confirmModal.id);
+            } else {
+              deleteStaff(confirmModal.id);
+            }
           }
         }}
-        title="Delete Department"
-        message="Are you sure you want to delete this department? This action cannot be undone and is only possible if no personnel are assigned."
+        title={confirmModal.type === "department" ? "Delete Department" : "Delete Personnel"}
+        message={confirmModal.type === "department" 
+          ? "Are you sure you want to delete this department? This action cannot be undone and is only possible if no personnel are assigned."
+          : "Are you sure you want to delete this staff member? This will also remove their system account. This action cannot be undone."}
         confirmText="Remove from Registry"
         variant="danger"
       />

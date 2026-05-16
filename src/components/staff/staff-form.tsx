@@ -28,10 +28,10 @@ const staffSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
   lastName: z.string().min(1, "Last name is required"),
   email: z.string().email("Invalid email address"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
+  password: z.string().min(6, "Password must be at least 6 characters").optional().or(z.literal("")),
   role: z.enum(["ADMIN", "DOCTOR", "NURSE", "BILLING", "PHARMACY", "LABORATORY"]),
-  departmentId: z.string().optional(),
-  specialization: z.string().optional(),
+  departmentId: z.string().optional().nullable(),
+  specialization: z.string().optional().nullable(),
 });
 
 type StaffFormValues = z.infer<typeof staffSchema>;
@@ -40,9 +40,20 @@ interface StaffFormProps {
   onSuccess: () => void;
   onCancel?: () => void;
   departments: any[];
+  initialData?: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    role: string;
+    specialization?: string | null;
+    departmentId?: string | null;
+    user?: {
+      email: string;
+    } | null;
+  };
 }
 
-export function StaffForm({ onSuccess, onCancel, departments }: StaffFormProps) {
+export function StaffForm({ onSuccess, onCancel, departments, initialData }: StaffFormProps) {
   const {
     register,
     handleSubmit,
@@ -51,26 +62,38 @@ export function StaffForm({ onSuccess, onCancel, departments }: StaffFormProps) 
     formState: { errors, isSubmitting }
   } = useForm<StaffFormValues>({
     resolver: zodResolver(staffSchema),
-    defaultValues: {
+    defaultValues: initialData ? {
+      firstName: initialData.firstName,
+      lastName: initialData.lastName,
+      email: initialData.user?.email || "",
+      role: initialData.role as any,
+      departmentId: initialData.departmentId || undefined,
+      specialization: initialData.specialization || "",
+      password: "",
+    } : {
       role: "NURSE"
     }
   });
 
   const onSubmit = async (data: StaffFormValues) => {
     try {
-      const response = await fetch("/api/admin/staff", {
-        method: "POST",
+      const url = initialData 
+        ? `/api/admin/staff/${initialData.id}`
+        : "/api/admin/staff";
+      
+      const response = await fetch(url, {
+        method: initialData ? "PATCH" : "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.error || "Failed to create staff member");
+        throw new Error(error.error || `Failed to ${initialData ? "update" : "create"} staff member`);
       }
 
-      toast.success("Staff member created successfully");
-      reset();
+      toast.success(`Staff member ${initialData ? "updated" : "created"} successfully`);
+      if (!initialData) reset();
       onSuccess();
     } catch (error: any) {
       toast.error(error.message);
@@ -110,7 +133,7 @@ export function StaffForm({ onSuccess, onCancel, departments }: StaffFormProps) 
         <div className="space-y-1.5">
           <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center">
             <Lock className="h-3 w-3 mr-2" />
-            Password
+            {initialData ? "New Password (Leave blank to keep current)" : "Password"}
           </Label>
           <Input {...register("password")} type="password" placeholder="••••••••" className="h-9 text-[11px] font-bold" />
           {errors.password && <p className="text-[9px] text-red-500 font-bold uppercase mt-1">{errors.password.message}</p>}
@@ -121,7 +144,7 @@ export function StaffForm({ onSuccess, onCancel, departments }: StaffFormProps) 
             <Shield className="h-3 w-3 mr-2" />
             System Role
           </Label>
-          <Select onValueChange={(val: any) => setValue("role", val)} defaultValue="NURSE">
+          <Select onValueChange={(val: any) => setValue("role", val)} defaultValue={initialData?.role || "NURSE"}>
             <SelectTrigger className="h-9 text-[11px] font-bold uppercase">
               <SelectValue placeholder="Select role" />
             </SelectTrigger>
@@ -141,7 +164,7 @@ export function StaffForm({ onSuccess, onCancel, departments }: StaffFormProps) 
             <Building className="h-3 w-3 mr-2" />
             Department
           </Label>
-          <Select onValueChange={(val) => setValue("departmentId", val)}>
+          <Select onValueChange={(val) => setValue("departmentId", val)} defaultValue={initialData?.departmentId || undefined}>
             <SelectTrigger className="h-9 text-[11px] font-bold uppercase">
               <SelectValue placeholder="Select department" />
             </SelectTrigger>
@@ -171,7 +194,7 @@ export function StaffForm({ onSuccess, onCancel, departments }: StaffFormProps) 
           </Button>
         )}
         <Button type="submit" className="bg-[#0f172a] text-white px-8 text-[10px] font-black uppercase tracking-widest h-10 shadow-sm" disabled={isSubmitting}>
-          {isSubmitting ? "Processing..." : "Register Staff Member"}
+          {isSubmitting ? "Processing..." : initialData ? "Update Staff Profile" : "Register Staff Member"}
         </Button>
       </div>
     </form>
