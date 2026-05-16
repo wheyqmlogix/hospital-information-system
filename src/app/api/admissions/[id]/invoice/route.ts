@@ -19,7 +19,11 @@ export async function GET(
           include: { staff: true }
         },
         admission: {
-          include: { patient: true }
+          include: { 
+            patient: true,
+            primaryCaseRate: true,
+            secondaryCaseRate: true
+          }
         }
       }
     });
@@ -41,7 +45,11 @@ export async function GET(
             include: { staff: true }
           },
           admission: {
-            include: { patient: true }
+            include: { 
+              patient: true,
+              primaryCaseRate: true,
+              secondaryCaseRate: true
+            }
           }
         }
       });

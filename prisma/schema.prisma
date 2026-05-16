@@ -50,18 +50,20 @@ model Admission {
   chiefComplaint     String
   admittingDiagnosis String?
   finalDiagnosis     String?
-  primaryCaseRateId  String?
-  roomNumber         String?
-  bedNumber          String?
-  admittedAt         DateTime        @default(now())
-  dischargedAt       DateTime?
-  admittedByUserId   String?
-  createdAt          DateTime        @default(now())
-  updatedAt          DateTime        @updatedAt
-  bedId              String?         @unique
-  bed                Bed?            @relation("CurrentBed", fields: [bedId], references: [id])
-  patient            Patient         @relation(fields: [patientId], references: [id])
-  primaryCaseRate    CaseRate?       @relation("PrimaryCaseRate", fields: [primaryCaseRateId], references: [id])
+  primaryCaseRateId   String?
+  secondaryCaseRateId String?
+  roomNumber          String?
+  bedNumber           String?
+  admittedAt          DateTime        @default(now())
+  dischargedAt        DateTime?
+  admittedByUserId    String?
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+  bedId               String?         @unique
+  bed                 Bed?            @relation("CurrentBed", fields: [bedId], references: [id])
+  patient             Patient         @relation(fields: [patientId], references: [id])
+  primaryCaseRate     CaseRate?       @relation("PrimaryCaseRate", fields: [primaryCaseRateId], references: [id])
+  secondaryCaseRate   CaseRate?       @relation("SecondaryCaseRate", fields: [secondaryCaseRateId], references: [id])
   doctorOrders       DoctorOrder[]
   invoice            Invoice?
   labOrders          LabOrder[]
@@ -270,7 +272,8 @@ model CaseRate {
   totalAmount Decimal     @db.Decimal(12, 2)
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
-  admissions  Admission[] @relation("PrimaryCaseRate")
+  primaryAdmissions    Admission[] @relation("PrimaryCaseRate")
+  secondaryAdmissions  Admission[] @relation("SecondaryCaseRate")
 }
 
 model User {

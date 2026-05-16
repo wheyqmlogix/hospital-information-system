@@ -28,7 +28,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PDFDownloadLink } from "@react-pdf/renderer";
 import { BillingStatement } from "@/components/admissions/billing-statement";
-import { PaymentModal } from "@/components/admissions/payment-modal";
 import { PhilHealthClaims } from "@/components/admissions/philhealth-claims";
 import { cn } from "@/lib/utils";
 
@@ -59,6 +58,7 @@ interface Invoice {
     id: string;
     admissionId: string;
     primaryCaseRateId?: string;
+    secondaryCaseRateId?: string;
     patient: {
       id: string;
       firstName: string;
@@ -82,20 +82,10 @@ export default function BillingPage({ params }: { params: Promise<{ id: string }
   const { id } = use(params);
   const [invoice, setInvoice] = useState<Invoice | null>(null);
   const [loading, setLoading] = useState(true);
-  const [isAddingItem, setIsAddingItem] = useState(false);
-  const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [caseRates, setCaseRates] = useState<CaseRate[]>([]);
-  const [selectedCaseRate, setSelectedCaseRate] = useState<string | null>(null);
+  const [selectedPrimary, setSelectedPrimary] = useState<string | null>(null);
+  const [selectedSecondary, setSelectedSecondary] = useState<string | null>(null);
   const [isClient, setIsClient] = useState(false);
-  
-  // New Item Form
-  const [newItem, setNewItem] = useState({
-    category: "MEDICATION",
-    description: "",
-    quantity: 1,
-    unitPrice: 0,
-    isVatable: true
-  });
 
   const fetchInvoice = useCallback(async () => {
     try {
@@ -104,7 +94,10 @@ export default function BillingPage({ params }: { params: Promise<{ id: string }
         const data = await res.json();
         setInvoice(data);
         if (data.admission?.primaryCaseRateId) {
-          setSelectedCaseRate(data.admission.primaryCaseRateId);
+          setSelectedPrimary(data.admission.primaryCaseRateId);
+        }
+        if (data.admission?.secondaryCaseRateId) {
+          setSelectedSecondary(data.admission.secondaryCaseRateId);
         }
       }
     } catch (err) {
@@ -131,39 +124,26 @@ export default function BillingPage({ params }: { params: Promise<{ id: string }
     });
   }, [fetchInvoice, fetchCaseRates]);
 
-  const handleUpdateCaseRate = async (rateId: string) => {
+  const handleUpdateCaseRate = async (type: "PRIMARY" | "SECONDARY", rateId: string) => {
     try {
+      const payload: any = {};
+      const normalizedRateId = rateId === "NONE" ? null : rateId;
+
+      if (type === "PRIMARY") {
+        payload.primaryCaseRateId = normalizedRateId;
+        setSelectedPrimary(normalizedRateId);
+      } else {
+        payload.secondaryCaseRateId = normalizedRateId;
+        setSelectedSecondary(normalizedRateId);
+      }
+
       const res = await fetch(`/api/admissions/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ primaryCaseRateId: rateId }),
-      });
-      if (res.ok) {
-        setSelectedCaseRate(rateId);
-        fetchInvoice();
-      }
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  const handleAddItem = async () => {
-    try {
-      const res = await fetch(`/api/admissions/${id}/invoice/items`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(newItem),
+        body: JSON.stringify(payload),
       });
       if (res.ok) {
         fetchInvoice();
-        setIsAddingItem(false);
-        setNewItem({
-          category: "MEDICATION",
-          description: "",
-          quantity: 1,
-          unitPrice: 0,
-          isVatable: true
-        });
       }
     } catch (err) {
       console.error(err);
@@ -232,29 +212,17 @@ export default function BillingPage({ params }: { params: Promise<{ id: string }
                 )}
              </PDFDownloadLink>
            )}
-           <Button 
-             onClick={() => setShowPaymentModal(true)}
-             disabled={invoice.balance <= 0}
-             className="bg-[#0f172a] text-white h-9 px-8 rounded-sm text-[9px] font-black uppercase tracking-widest shadow-sm"
-           >
-              <CreditCard className="h-3.5 w-3.5 mr-2" />
-              {invoice.status === 'PAID' ? 'Settlement Finalized' : 'Execute Collection'}
-           </Button>
+           <Link href={`/admissions/${id}/billing/payment`}>
+             <Button 
+               disabled={invoice.balance <= 0}
+               className="bg-[#0f172a] text-white h-9 px-8 rounded-sm text-[9px] font-black uppercase tracking-widest shadow-sm"
+             >
+                <CreditCard className="h-3.5 w-3.5 mr-2" />
+                {invoice.status === 'PAID' ? 'Settlement Finalized' : 'Execute Collection'}
+             </Button>
+           </Link>
         </div>
       </div>
-
-      {showPaymentModal && (
-        <PaymentModal 
-          invoiceId={invoice.id}
-          invoiceNumber={invoice.invoiceNumber}
-          balance={invoice.balance}
-          onSuccess={() => {
-            setShowPaymentModal(false);
-            fetchInvoice();
-          }}
-          onCancel={() => setShowPaymentModal(false)}
-        />
-      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
          {/* Left Column: Items */}
@@ -265,71 +233,16 @@ export default function BillingPage({ params }: { params: Promise<{ id: string }
                      <Receipt className="h-3.5 w-3.5 text-[#0f172a]" />
                      Statement of Account (SOA) Registry
                   </h2>
-                  <Button 
-                    onClick={() => setIsAddingItem(!isAddingItem)}
-                    className="h-7 px-3 rounded-[1px] bg-[#0f172a] text-white text-[8px] font-black uppercase tracking-widest"
-                  >
-                    <Plus className="h-3 w-3 mr-1" />
-                    Provision Item
-                  </Button>
+                  <Link href={`/admissions/${id}/billing/items/new`}>
+                    <Button 
+                      className="h-7 px-3 rounded-[1px] bg-[#0f172a] text-white text-[8px] font-black uppercase tracking-widest"
+                    >
+                      <Plus className="h-3 w-3 mr-1" />
+                      Provision Item
+                    </Button>
+                  </Link>
                </div>
                <CardContent className="p-0">
-                  {isAddingItem && (
-                    <div className="p-8 bg-slate-50 border-b border-slate-200 space-y-5 animate-in slide-in-from-top-2 duration-300">
-                       <div className="grid grid-cols-2 gap-4">
-                          <div className="space-y-1.5">
-                             <Label className="text-[9px] font-black uppercase tracking-widest text-slate-400">Ledger Category</Label>
-                             <Select onValueChange={(val) => setNewItem({...newItem, category: val})} defaultValue={newItem.category}>
-                                <SelectTrigger className="h-8 rounded-sm bg-white border-slate-200 text-[10px] font-bold uppercase tracking-tight">
-                                   <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent className="rounded-sm border-slate-200 shadow-xl">
-                                   <SelectItem value="MEDICATION" className="text-[10px] font-bold uppercase">Medication</SelectItem>
-                                   <SelectItem value="CSR" className="text-[10px] font-bold uppercase">Central Supply (CSR)</SelectItem>
-                                   <SelectItem value="LABORATORY" className="text-[10px] font-bold uppercase">Laboratory</SelectItem>
-                                   <SelectItem value="PROCEDURE" className="text-[10px] font-bold uppercase">Procedure</SelectItem>
-                                   <SelectItem value="PF" className="text-[10px] font-bold uppercase">Professional Fee</SelectItem>
-                                   <SelectItem value="ROOM" className="text-[10px] font-bold uppercase">Room / Board</SelectItem>
-                                </SelectContent>
-                             </Select>
-                          </div>
-                          <div className="space-y-1.5">
-                             <Label className="text-[9px] font-black uppercase tracking-widest text-slate-400">Institutional Descriptor</Label>
-                             <Input 
-                               className="h-8 rounded-sm bg-white border-slate-200 text-[10px] font-bold uppercase" 
-                               value={newItem.description}
-                               onChange={(e) => setNewItem({...newItem, description: e.target.value})}
-                             />
-                          </div>
-                       </div>
-                       <div className="grid grid-cols-3 gap-4">
-                          <div className="space-y-1.5">
-                             <Label className="text-[9px] font-black uppercase tracking-widest text-slate-400">Unit Quantum (PHP)</Label>
-                             <Input 
-                               type="number" 
-                               className="h-8 rounded-sm bg-white border-slate-200 text-[10px] font-bold uppercase" 
-                               value={newItem.unitPrice}
-                               onChange={(e) => setNewItem({...newItem, unitPrice: Number(e.target.value)})}
-                             />
-                          </div>
-                          <div className="space-y-1.5">
-                             <Label className="text-[9px] font-black uppercase tracking-widest text-slate-400">Units</Label>
-                             <Input 
-                               type="number" 
-                               className="h-8 rounded-sm bg-white border-slate-200 text-[10px] font-bold uppercase" 
-                               value={newItem.quantity}
-                               onChange={(e) => setNewItem({...newItem, quantity: Number(e.target.value)})}
-                             />
-                          </div>
-                          <div className="flex items-end pb-0.5">
-                             <Button onClick={handleAddItem} className="w-full bg-[#0f172a] text-white h-8 rounded-sm text-[9px] font-black uppercase tracking-widest shadow-sm">
-                                Authorize Addition
-                             </Button>
-                          </div>
-                       </div>
-                    </div>
-                  )}
-
                   <div className="overflow-x-auto">
                      <table className="w-full text-left border-collapse">
                         <thead>
@@ -432,10 +345,10 @@ export default function BillingPage({ params }: { params: Promise<{ id: string }
                </div>
                <CardContent className="p-8 space-y-6">
                   <div className="space-y-2">
-                     <Label className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">ICD-10 Primary Identifier</Label>
-                     <Select onValueChange={handleUpdateCaseRate} value={selectedCaseRate || ""}>
+                     <Label className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Primary ICD-10/RVS</Label>
+                     <Select onValueChange={(val) => handleUpdateCaseRate("PRIMARY", val)} value={selectedPrimary || ""}>
                         <SelectTrigger className="rounded-sm border-slate-200 h-10 text-[10px] font-bold uppercase tracking-tight">
-                           <SelectValue placeholder="Select Record Category" />
+                           <SelectValue placeholder="First Case Rate" />
                         </SelectTrigger>
                         <SelectContent className="rounded-sm border-slate-200 shadow-xl max-h-[300px]">
                            {caseRates.map((rate) => (
@@ -449,6 +362,35 @@ export default function BillingPage({ params }: { params: Promise<{ id: string }
                         </SelectContent>
                      </Select>
                   </div>
+
+                  <div className="space-y-2">
+                     <Label className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Secondary ICD-10/RVS (50%)</Label>
+                     <Select onValueChange={(val) => handleUpdateCaseRate("SECONDARY", val)} value={selectedSecondary || ""}>
+                        <SelectTrigger className="rounded-sm border-slate-200 h-10 text-[10px] font-bold uppercase tracking-tight">
+                           <SelectValue placeholder="Second Case Rate" />
+                        </SelectTrigger>
+                        <SelectContent className="rounded-sm border-slate-200 shadow-xl max-h-[300px]">
+                           <SelectItem value="NONE" className="text-[10px] font-bold uppercase">No Secondary Rate</SelectItem>
+                           {caseRates.map((rate) => (
+                             <SelectItem key={rate.id} value={rate.id} className="focus:bg-slate-50 rounded-sm">
+                                <div className="flex flex-col text-left py-1">
+                                   <span className="text-[10px] font-black text-[#0f172a] uppercase">{rate.code}: {rate.description}</span>
+                                   <span className="text-[8px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">Benefit: {currencyFormatter.format(Number(rate.totalAmount) * 0.5)}</span>
+                                </div>
+                             </SelectItem>
+                           ))}
+                        </SelectContent>
+                     </Select>
+                  </div>
+
+                  {selectedPrimary && (
+                    <div className="p-4 bg-slate-50 rounded-sm border border-slate-100 flex items-center justify-between">
+                       <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">Autocomputed Benefit</span>
+                       <span className="text-[12px] font-black text-[#0f172a] tracking-tighter">
+                          {currencyFormatter.format(Number(invoice.philHealthAmount))}
+                       </span>
+                    </div>
+                  )}
                </CardContent>
             </Card>
 

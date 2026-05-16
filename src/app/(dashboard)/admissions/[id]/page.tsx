@@ -23,7 +23,6 @@ import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { VitalsForm } from "@/components/admissions/vitals-form";
 import { NursingNotes } from "@/components/admissions/nursing-notes";
 import { LabOrders } from "@/components/admissions/lab-orders";
 import { PharmacyDispensing } from "@/components/admissions/pharmacy-dispensing";
@@ -78,7 +77,6 @@ export default function AdmissionDetailPage({ params }: { params: Promise<{ id: 
   const { id } = use(params);
   const [admission, setAdmission] = useState<AdmissionDetail | null>(null);
   const [vitals, setVitals] = useState<VitalsRecord[]>([]);
-  const [showVitalsForm, setShowVitalsForm] = useState(false);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"MONITORING" | "NOTES" | "LAB" | "PHARMACY" | "CSR" | "DIAGNOSIS" | "ORDERS">("MONITORING");
   const [finalDiagnosis, setFinalDiagnosis] = useState("");
@@ -194,13 +192,14 @@ export default function AdmissionDetailPage({ params }: { params: Promise<{ id: 
 
         <div className="flex items-center gap-2">
            <Protected permission="add_vitals">
-             <Button 
-               onClick={() => setShowVitalsForm(true)}
-               className="bg-[#0f172a] text-white h-9 px-6 text-[9px] font-black uppercase tracking-widest"
-             >
-                <Plus className="h-3 w-3 mr-2" />
-                Record Vitals
-             </Button>
+             <Link href={`/admissions/${admission.id}/vitals/new`}>
+               <Button 
+                 className="bg-[#0f172a] text-white h-9 px-6 text-[9px] font-black uppercase tracking-widest"
+               >
+                  <Plus className="h-3 w-3 mr-2" />
+                  Record Vitals
+               </Button>
+             </Link>
            </Protected>
            <Protected permission="view_billing">
              <Link href={`/admissions/${admission.id}/billing`}>
@@ -217,7 +216,7 @@ export default function AdmissionDetailPage({ params }: { params: Promise<{ id: 
              >
                 {({ loading }) => (
                   <Button className="bg-[#0f172a] text-white h-9 px-6 text-[9px] font-black uppercase tracking-widest" disabled={loading}>
-                     <Printer className="h-3 w-3 mr-2" />
+                     <Printer className="h-3.5 w-3.5 mr-2" />
                      {loading ? 'Processing...' : 'Export Discharge Summary'}
                   </Button>
                 )}
@@ -226,18 +225,8 @@ export default function AdmissionDetailPage({ params }: { params: Promise<{ id: 
         </div>
       </div>
 
-      {showVitalsForm && (
-        <VitalsForm 
-          admissionId={admission.id} 
-          onSuccess={() => {
-            setShowVitalsForm(false);
-            fetchData();
-          }}
-          onCancel={() => setShowVitalsForm(false)}
-        />
-      )}
-
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+
          {/* Left Column: Encounter Summary */}
          <div className="space-y-8">
             <Card className="border-slate-200 rounded-sm overflow-hidden bg-white">

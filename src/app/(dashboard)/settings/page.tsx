@@ -14,8 +14,8 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { StaffModal } from "@/components/staff/staff-modal";
-import { DepartmentModal } from "@/components/staff/department-modal";
+import { cn } from "@/lib/utils";
+import Link from "next/link";
 
 interface StaffMember {
   id: string;
@@ -48,8 +48,6 @@ export default function SettingsPage() {
   const [staff, setStaff] = useState<StaffMember[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isStaffModalOpen, setIsStaffModalOpen] = useState(false);
-  const [isDepartmentModalOpen, setIsDepartmentModalOpen] = useState(false);
 
   const fetchData = async () => {
     await Promise.resolve();
@@ -73,11 +71,6 @@ export default function SettingsPage() {
     Promise.resolve().then(() => fetchData());
   }, [activeTab]);
 
-  const handleAddClick = () => {
-    if (activeTab === "staff") setIsStaffModalOpen(true);
-    else setIsDepartmentModalOpen(true);
-  };
-
   return (
     <div className="max-w-full space-y-8 pb-20">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-slate-200 pb-8">
@@ -89,10 +82,12 @@ export default function SettingsPage() {
           <Button variant="outline" onClick={fetchData} className="h-9 px-6 rounded-sm border-slate-300 text-[9px] font-black uppercase tracking-widest">
             Registry Sync
           </Button>
-          <Button onClick={handleAddClick} className="bg-[#0f172a] text-white h-9 px-6 rounded-sm text-[9px] font-black uppercase tracking-widest shadow-sm">
-            <Plus className="h-3.5 w-3.5 mr-2" />
-            {activeTab === "staff" ? "Provision Staff Account" : "Initialize Department"}
-          </Button>
+          <Link href={activeTab === "staff" ? "/settings/staff/new" : "/settings/departments/new"}>
+            <Button className="bg-[#0f172a] text-white h-9 px-6 rounded-sm text-[9px] font-black uppercase tracking-widest shadow-sm">
+              <Plus className="h-3.5 w-3.5 mr-2" />
+              {activeTab === "staff" ? "Provision Staff Account" : "Initialize Department"}
+            </Button>
+          </Link>
         </div>
       </div>
 
@@ -237,18 +232,6 @@ export default function SettingsPage() {
         )}
       </div>
 ...
-      <StaffModal 
-        isOpen={isStaffModalOpen} 
-        onClose={() => setIsStaffModalOpen(false)} 
-        onSuccess={fetchData}
-        departments={departments}
-      />
-
-      <DepartmentModal
-        isOpen={isDepartmentModalOpen}
-        onClose={() => setIsDepartmentModalOpen(false)}
-        onSuccess={fetchData}
-      />
     </div>
   );
 }

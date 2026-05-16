@@ -72,6 +72,12 @@ body {
   overflow-x: hidden;
 }
 
+button, 
+a, 
+[role="button"] {
+  cursor: pointer;
+}
+
 /* Safe area insets for notches */
 .pb-safe {
   padding-bottom: env(safe-area-inset-bottom);

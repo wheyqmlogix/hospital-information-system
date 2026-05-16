@@ -10,10 +10,8 @@ import {
   TrendingDown,
   Activity,
   ArrowLeft,
-  X,
   Search,
-  RefreshCw,
-  MoreVertical
+  RefreshCw
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -55,27 +53,7 @@ export default function CSRInventoryPage() {
   const [supplies, setSupplies] = useState<SupplyItem[]>([]);
   const [transactions, setTransactions] = useState<SupplyTransaction[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isAdding, setIsAdding] = useState(false);
-  const [isRestocking, setIsRestocking] = useState(false);
-  const [selectedItemForRestock, setSelectedItemForRestock] = useState<SupplyItem | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  
-  // New Item Form State
-  const [newItem, setNewItem] = useState({
-    code: "",
-    name: "",
-    category: "CONSUMABLE",
-    unit: "pc",
-    price: 0,
-    reorderLevel: 50
-  });
-
-  // Restock Form State
-  const [restockForm, setRestockForm] = useState({
-    batchNumber: "",
-    expiryDate: "",
-    quantity: 1
-  });
 
   const fetchData = async () => {
     setLoading(true);
@@ -97,59 +75,6 @@ export default function CSRInventoryPage() {
     fetchData();
   }, []);
 
-  const handleAddItem = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      const res = await fetch("/api/csr", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(newItem),
-      });
-      if (res.ok) {
-        setIsAdding(false);
-        setNewItem({
-          code: "",
-          name: "",
-          category: "CONSUMABLE",
-          unit: "pc",
-          price: 0,
-          reorderLevel: 50
-        });
-        fetchData();
-      }
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
-  const handleRestock = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedItemForRestock) return;
-    
-    try {
-      const res = await fetch("/api/csr/restock", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          supplyItemId: selectedItemForRestock.id,
-          ...restockForm
-        }),
-      });
-      if (res.ok) {
-        setIsRestocking(false);
-        setSelectedItemForRestock(null);
-        setRestockForm({
-          batchNumber: "",
-          expiryDate: "",
-          quantity: 1
-        });
-        fetchData();
-      }
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
   const filteredSupplies = supplies.filter(item => 
     item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     item.code.toLowerCase().includes(searchQuery.toLowerCase())
@@ -157,159 +82,6 @@ export default function CSRInventoryPage() {
 
   return (
     <div className="max-w-full space-y-8 pb-20 relative">
-      {/* Institutional Modals */}
-      {isAdding && (
-        <div className="fixed inset-0 bg-[#0f172a]/20 backdrop-blur-[1px] z-50 flex items-center justify-center p-4">
-           <Card className="w-full max-w-xl border border-slate-200 shadow-2xl rounded-sm overflow-hidden bg-white">
-              <div className="px-6 py-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
-                 <h2 className="text-[10px] font-black text-[#0f172a] uppercase tracking-[0.2em]">New Supply Asset Registry</h2>
-                 <Button variant="ghost" size="icon" onClick={() => setIsAdding(false)} className="h-6 w-6">
-                    <X className="h-3 w-3" />
-                 </Button>
-              </div>
-              <CardContent className="p-6">
-                 <form onSubmit={handleAddItem} className="space-y-6">
-                    <div className="grid grid-cols-2 gap-x-4 gap-y-5">
-                       <div className="space-y-1.5">
-                          <Label className="text-[9px] font-black uppercase tracking-widest text-slate-400">Institutional SKU</Label>
-                          <Input 
-                            required 
-                            placeholder="CSR-XXX-000" 
-                            className="h-8 rounded-sm bg-slate-50 focus:bg-white text-[10px] font-bold"
-                            value={newItem.code}
-                            onChange={e => setNewItem({...newItem, code: e.target.value})}
-                          />
-                       </div>
-                       <div className="space-y-1.5">
-                          <Label className="text-[9px] font-black uppercase tracking-widest text-slate-400">Asset Nomenclature</Label>
-                          <Input 
-                            required 
-                            placeholder="e.g. Disposable Syringe" 
-                            className="h-8 rounded-sm bg-slate-50 focus:bg-white text-[10px] font-bold"
-                            value={newItem.name}
-                            onChange={e => setNewItem({...newItem, name: e.target.value})}
-                          />
-                       </div>
-                       <div className="space-y-1.5">
-                          <Label className="text-[9px] font-black uppercase tracking-widest text-slate-400">Classification</Label>
-                          <Select onValueChange={v => setNewItem({...newItem, category: v})} defaultValue={newItem.category}>
-                             <SelectTrigger className="h-8 rounded-sm bg-slate-50 focus:bg-white text-[10px] font-bold">
-                                <SelectValue placeholder="Select Category" />
-                             </SelectTrigger>
-                             <SelectContent className="rounded-sm">
-                                <SelectItem value="CONSUMABLE" className="text-[10px] font-bold uppercase">Consumable</SelectItem>
-                                <SelectItem value="PROTECTIVE" className="text-[10px] font-bold uppercase">Protective Gear</SelectItem>
-                                <SelectItem value="SURGICAL" className="text-[10px] font-bold uppercase">Surgical Instrument</SelectItem>
-                                <SelectItem value="EQUIPMENT" className="text-[10px] font-bold uppercase">Equipment</SelectItem>
-                             </SelectContent>
-                          </Select>
-                       </div>
-                       <div className="space-y-1.5">
-                          <Label className="text-[9px] font-black uppercase tracking-widest text-slate-400">Issuance Unit</Label>
-                          <Input 
-                            required 
-                            placeholder="pc, pair, pad..." 
-                            className="h-8 rounded-sm bg-slate-50 focus:bg-white text-[10px] font-bold"
-                            value={newItem.unit}
-                            onChange={e => setNewItem({...newItem, unit: e.target.value})}
-                          />
-                       </div>
-                       <div className="space-y-1.5">
-                          <Label className="text-[9px] font-black uppercase tracking-widest text-slate-400">Institutional Price (PHP)</Label>
-                          <Input 
-                            required 
-                            type="number" 
-                            step="0.01"
-                            className="h-8 rounded-sm bg-slate-50 focus:bg-white text-[10px] font-bold"
-                            value={newItem.price}
-                            onChange={e => setNewItem({...newItem, price: Number(e.target.value)})}
-                          />
-                       </div>
-                       <div className="space-y-1.5">
-                          <Label className="text-[9px] font-black uppercase tracking-widest text-slate-400">Critical Threshold</Label>
-                          <Input 
-                            required 
-                            type="number" 
-                            className="h-8 rounded-sm bg-slate-50 focus:bg-white text-[10px] font-bold"
-                            value={newItem.reorderLevel}
-                            onChange={e => setNewItem({...newItem, reorderLevel: Number(e.target.value)})}
-                          />
-                       </div>
-                    </div>
-                    <div className="flex gap-2 pt-4 border-t border-slate-100">
-                       <Button type="button" variant="outline" onClick={() => setIsAdding(false)} className="flex-1 h-8 rounded-sm text-[9px] font-black uppercase tracking-widest">
-                          Cancel
-                       </Button>
-                       <Button type="submit" className="flex-1 h-8 rounded-sm bg-[#0f172a] text-white text-[9px] font-black uppercase tracking-widest">
-                          Commit Asset to Registry
-                       </Button>
-                    </div>
-                 </form>
-              </CardContent>
-           </Card>
-        </div>
-      )}
-
-      {/* Restock Modal */}
-      {isRestocking && selectedItemForRestock && (
-        <div className="fixed inset-0 bg-[#0f172a]/20 backdrop-blur-[1px] z-50 flex items-center justify-center p-4">
-           <Card className="w-full max-w-md border border-slate-200 shadow-2xl rounded-sm overflow-hidden bg-white">
-              <div className="px-6 py-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
-                 <h2 className="text-[10px] font-black text-[#0f172a] uppercase tracking-[0.2em]">Inventory Reconciliation: Stock In</h2>
-                 <Button variant="ghost" size="icon" onClick={() => setIsRestocking(false)} className="h-6 w-6">
-                    <X className="h-3 w-3" />
-                 </Button>
-              </div>
-              <CardContent className="p-6">
-                 <div className="mb-6 p-4 bg-slate-50 border border-slate-200 rounded-sm">
-                    <p className="text-[8px] font-black uppercase tracking-[0.2em] text-slate-400 mb-1">Target Asset</p>
-                    <p className="text-xs font-black text-[#0f172a] uppercase">{selectedItemForRestock.name}</p>
-                    <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest mt-1">{selectedItemForRestock.code} • Unit: {selectedItemForRestock.unit}</p>
-                 </div>
-                 
-                 <form onSubmit={handleRestock} className="space-y-5">
-                    <div className="space-y-1.5">
-                       <Label className="text-[9px] font-black uppercase tracking-widest text-slate-400">Batch / Lot Control Number</Label>
-                       <Input 
-                         required 
-                         className="h-8 rounded-sm bg-slate-50 focus:bg-white text-[10px] font-bold"
-                         value={restockForm.batchNumber}
-                         onChange={e => setRestockForm({...restockForm, batchNumber: e.target.value})}
-                       />
-                    </div>
-                    <div className="space-y-1.5">
-                       <Label className="text-[9px] font-black uppercase tracking-widest text-slate-400">Asset Expiration (Optional)</Label>
-                       <Input 
-                         type="date"
-                         className="h-8 rounded-sm bg-slate-50 focus:bg-white text-[10px] font-bold uppercase"
-                         value={restockForm.expiryDate}
-                         onChange={e => setRestockForm({...restockForm, expiryDate: e.target.value})}
-                       />
-                    </div>
-                    <div className="space-y-1.5">
-                       <Label className="text-[9px] font-black uppercase tracking-widest text-slate-400">Unit Quantity Incoming</Label>
-                       <Input 
-                         required 
-                         type="number" 
-                         className="h-8 rounded-sm bg-slate-50 focus:bg-white text-[10px] font-bold"
-                         value={restockForm.quantity}
-                         onChange={e => setRestockForm({...restockForm, quantity: Number(e.target.value)})}
-                       />
-                    </div>
-                    <div className="flex gap-2 pt-4 border-t border-slate-100">
-                       <Button type="button" variant="outline" onClick={() => setIsRestocking(false)} className="flex-1 h-8 rounded-sm text-[9px] font-black uppercase tracking-widest">
-                          Cancel
-                       </Button>
-                       <Button type="submit" className="flex-1 h-8 rounded-sm bg-[#0f172a] text-white text-[9px] font-black uppercase tracking-widest">
-                          Authorize Restock
-                       </Button>
-                    </div>
-                 </form>
-              </CardContent>
-           </Card>
-        </div>
-      )}
-
       {/* Page Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-slate-200 pb-8">
         <div>
@@ -326,13 +98,14 @@ export default function CSRInventoryPage() {
             <RefreshCw className={cn("h-3 w-3 mr-2", loading && "animate-spin")} />
             Sync Registry
           </Button>
-          <Button 
-            onClick={() => setIsAdding(true)}
-            className="bg-[#0f172a] text-white h-8 px-6 text-[9px] font-black uppercase tracking-widest"
-          >
-            <Plus className="h-3 w-3 mr-2" />
-            Register Asset
-          </Button>
+          <Link href="/csr/new">
+            <Button 
+              className="bg-[#0f172a] text-white h-8 px-6 text-[9px] font-black uppercase tracking-widest"
+            >
+              <Plus className="h-3 w-3 mr-2" />
+              Register Asset
+            </Button>
+          </Link>
         </div>
       </div>
 
@@ -405,18 +178,16 @@ export default function CSRInventoryPage() {
                            <span className="text-[10px] font-black text-[#0f172a] tracking-tight">₱{Number(s.price).toFixed(2)}</span>
                         </td>
                         <td className="px-6 py-4 text-right">
-                           <Button 
-                             size="sm" 
-                             variant="outline" 
-                             onClick={() => {
-                               setSelectedItemForRestock(s);
-                               setIsRestocking(true);
-                             }}
-                             className="h-7 px-3 rounded-[1px] border-slate-200 text-[#0f172a] text-[8px] font-black uppercase tracking-[0.2em]"
-                           >
-                              <TrendingUp className="h-3 w-3 mr-2" />
-                              Restock
-                           </Button>
+                           <Link href={`/csr/restock/${s.id}`}>
+                              <Button 
+                                size="sm" 
+                                variant="outline" 
+                                className="h-7 px-3 rounded-[1px] border-slate-200 text-[#0f172a] text-[8px] font-black uppercase tracking-[0.2em]"
+                              >
+                                 <TrendingUp className="h-3 w-3 mr-2" />
+                                 Restock
+                              </Button>
+                           </Link>
                         </td>
                       </tr>
                     ))}

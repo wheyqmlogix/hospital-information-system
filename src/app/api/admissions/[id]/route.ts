@@ -39,56 +39,71 @@ export async function PATCH(
     const { id } = await params;
     await authorize("create_admissions");
     const body = await req.json();
-    const { finalDiagnosis, primaryCaseRateId, status } = body;
+    const { finalDiagnosis, primaryCaseRateId, secondaryCaseRateId, status } = body;
 
     const updated = await prisma.admission.update({
       where: { id },
       data: {
         finalDiagnosis,
         primaryCaseRateId,
+        secondaryCaseRateId,
         status,
         dischargedAt: status === "DISCHARGED" ? new Date() : undefined
       },
       include: {
-        primaryCaseRate: true
+        primaryCaseRate: true,
+        secondaryCaseRate: true
       }
     });
 
     // If case rate is updated, we need to update the invoice PhilHealth amount
-    if (primaryCaseRateId) {
-      const caseRate = await prisma.caseRate.findUnique({ where: { id: primaryCaseRateId } });
-      if (caseRate) {
+    if (primaryCaseRateId || secondaryCaseRateId) {
+      const primaryRate = primaryCaseRateId ? await prisma.caseRate.findUnique({ where: { id: primaryCaseRateId } }) : null;
+      const secondaryRate = secondaryCaseRateId ? await prisma.caseRate.findUnique({ where: { id: secondaryCaseRateId } }) : null;
+      
+      let totalPhilHealth = 0;
+      if (primaryRate) {
+        totalPhilHealth += Number(primaryRate.totalAmount);
+      }
+      if (secondaryRate) {
+        // PhilHealth rule: Second case rate is 50%
+        totalPhilHealth += Number(secondaryRate.totalAmount) * 0.5;
+      }
+
+      await prisma.invoice.update({
+        where: { admissionId: id },
+        data: {
+          philHealthAmount: totalPhilHealth
+        }
+      });
+      
+      // Trigger recalculation of netAmount
+      const invoice = await prisma.invoice.findUnique({
+        where: { admissionId: id },
+        include: { items: true }
+      });
+      
+      if (invoice) {
+        const isSeniorOrPWD = invoice.discountType === "SENIOR_CITIZEN" || invoice.discountType === "PWD";
+        const { calculatePHBilling } = await import("@/lib/billing");
+        const billingItems = invoice.items.map(item => ({
+          unitPrice: Number(item.unitPrice),
+          quantity: item.quantity,
+          isVatable: item.isVatable
+        }));
+        
+        const totals = calculatePHBilling(billingItems, isSeniorOrPWD, totalPhilHealth);
+        
         await prisma.invoice.update({
-          where: { admissionId: id },
+          where: { id: invoice.id },
           data: {
-            philHealthAmount: caseRate.totalAmount
+            netAmount: totals.netAmount,
+            grossAmount: totals.grossAmount,
+            vatAmount: totals.vatAmount,
+            discountAmount: totals.discountAmount,
+            balance: Number(totals.netAmount) - Number(invoice.paidAmount)
           }
         });
-        
-        // Trigger recalculation of netAmount
-        const invoice = await prisma.invoice.findUnique({
-          where: { admissionId: id },
-          include: { items: true }
-        });
-        
-        if (invoice) {
-          const isSeniorOrPWD = invoice.discountType === "SENIOR_CITIZEN" || invoice.discountType === "PWD";
-          const { calculatePHBilling } = await import("@/lib/billing");
-          const billingItems = invoice.items.map(item => ({
-            unitPrice: Number(item.unitPrice),
-            quantity: item.quantity,
-            isVatable: item.isVatable
-          }));
-          
-          const totals = calculatePHBilling(billingItems, isSeniorOrPWD);
-          
-          await prisma.invoice.update({
-            where: { id: invoice.id },
-            data: {
-              netAmount: Number(totals.netAmount) - Number(caseRate.totalAmount)
-            }
-          });
-        }
       }
     }
 
